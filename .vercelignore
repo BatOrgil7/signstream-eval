@@ -1,0 +1,11 @@
+node_modules
+.vite-cache
+dist
+qa-*.png
+vite-dev.log
+landmarks*.csv
+asl_model*.h5
+label_encoder*.pkl
+*.keras
+__pycache__
+.venv

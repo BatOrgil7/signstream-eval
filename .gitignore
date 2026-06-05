@@ -173,9 +173,27 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# Node / Vercel
+node_modules/
+.vite-cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+.vercel/
+
+# Local capstone data/model artifacts
+landmarks*.csv
+asl_model*.h5
+label_encoder*.pkl
+*.keras
+
 # Cursor  
 #  Cursor is an AI-powered code editor.`.cursorignore` specifies files/directories to 
 #  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+.vercel

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Few-shot signer personalization prototype for real-time sign recognition research."
+    />
+    <title>Few-Shot Sign Lab</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <div>
+          <p class="project-label">Honors Capstone Prototype</p>
+          <h1>Few-Shot Sign Lab</h1>
+          <p class="header-copy">
+            Real-time signer personalization for isolated sign recognition.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button class="secondary-button" id="export-json-button" type="button">
+            Export JSON
+          </button>
+          <button class="secondary-button" id="export-csv-button" type="button">
+            Export CSV
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="video-shell" aria-label="Live camera recognition">
+          <div class="video-toolbar">
+            <div>
+              <span class="status-dot" id="model-status-dot"></span>
+              <span id="model-status">Loading hand tracker</span>
+            </div>
+            <div class="toolbar-actions">
+              <button class="primary-button" id="camera-button" type="button">
+                Start Camera
+              </button>
+              <button class="secondary-button" id="reset-session-button" type="button">
+                Reset Session
+              </button>
+            </div>
+          </div>
+
+          <div class="video-stage">
+            <video id="webcam" playsinline muted></video>
+            <canvas id="overlay-canvas"></canvas>
+            <div class="prediction-panel">
+              <span class="prediction-label">Prediction</span>
+              <strong id="prediction">No hand</strong>
+              <span id="confidence">0%</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="control-panel" aria-label="Calibration controls">
+          <section class="panel-section">
+            <div class="section-heading">
+              <h2>Sign Set</h2>
+              <span id="label-count">0 signs</span>
+            </div>
+            <label class="field-label" for="label-input">Labels</label>
+            <textarea
+              id="label-input"
+              rows="3"
+              spellcheck="false"
+              aria-describedby="label-help"
+            >A, B, C, I, L, Y</textarea>
+            <p class="field-help" id="label-help">
+              Use short isolated signs or glosses separated by commas.
+            </p>
+            <div class="sign-grid" id="sign-grid"></div>
+          </section>
+
+          <section class="panel-section">
+            <div class="section-heading">
+              <h2>Calibration</h2>
+              <span id="active-label">A</span>
+            </div>
+            <div class="metric-row">
+              <div>
+                <span>Samples for sign</span>
+                <strong id="active-sample-count">0</strong>
+              </div>
+              <div>
+                <span>Total samples</span>
+                <strong id="total-sample-count">0</strong>
+              </div>
+            </div>
+            <div class="button-row">
+              <button class="primary-button" id="capture-once-button" type="button">
+                Capture One
+              </button>
+              <button class="secondary-button" id="record-button" type="button">
+                Record Stream
+              </button>
+            </div>
+            <button class="text-button" id="clear-label-button" type="button">
+              Clear current sign samples
+            </button>
+          </section>
+
+          <section class="panel-section">
+            <div class="section-heading">
+              <h2>Recognizer</h2>
+              <span id="recognizer-mode">kNN</span>
+            </div>
+            <label class="range-label" for="neighbor-slider">
+              Neighbors <span id="neighbor-value">5</span>
+            </label>
+            <input id="neighbor-slider" type="range" min="1" max="11" step="2" value="5" />
+
+            <label class="range-label" for="threshold-slider">
+              Confidence threshold <span id="threshold-value">42%</span>
+            </label>
+            <input id="threshold-slider" type="range" min="20" max="90" step="1" value="42" />
+          </section>
+        </aside>
+      </main>
+
+      <section class="research-strip" aria-label="Research session summary">
+        <div>
+          <span class="strip-label">Research Question</span>
+          <p>
+            Can a lightweight landmark-based recognizer adapt to a new signer
+            after only a few examples per sign?
+          </p>
+        </div>
+        <div>
+          <span class="strip-label">Current Trial</span>
+          <p id="trial-summary">No predictions recorded yet.</p>
+        </div>
+        <div>
+          <span class="strip-label">Privacy</span>
+          <p>Camera frames and samples stay in this browser unless exported.</p>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>
