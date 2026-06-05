@@ -2,6 +2,8 @@
 
 Honors capstone prototype for real-time isolated sign recognition with signer personalization.
 
+Live demo: https://asl-translation-capstone.vercel.app
+
 The research problem is not "translate all ASL." The focused problem is:
 
 > Can a lightweight landmark-based recognizer adapt to a new signer after only a few examples per sign?
@@ -10,6 +12,18 @@ This repository contains two prototype tracks:
 
 - **Web prototype**: a Vercel-ready browser app that uses the webcam, MediaPipe hand landmarks, and a local few-shot k-nearest-neighbor classifier.
 - **Python prototype**: early OpenCV/MediaPipe/TensorFlow scripts for collecting hand landmarks, training a model, and running live desktop inference.
+
+## Quick Test For Professors And Reviewers
+
+1. Open https://asl-translation-capstone.vercel.app in Chrome, Edge, or another modern browser.
+2. Click **Start Camera** and allow webcam access.
+3. Keep the default labels or replace them with a small set of isolated signs/glosses.
+4. Select one label, perform that sign, and click **Capture One** several times.
+5. Repeat for the other labels.
+6. Try the signs again and watch the live prediction panel.
+7. Use **Export JSON** or **Export CSV** if you want to inspect the collected landmark samples.
+
+For a more structured test session, use [docs/USER_TESTING_GUIDE.md](docs/USER_TESTING_GUIDE.md).
 
 ## Live Web Prototype
 
@@ -23,6 +37,13 @@ npm run dev
 ```
 
 Open the local URL printed by Vite, start the camera, pick a label, and capture a few examples per sign.
+
+### Production build
+
+```bash
+npm run build
+npm run preview
+```
 
 ### Deploy
 
@@ -66,6 +87,28 @@ Use the web prototype for early pilot testing, then move to a controlled benchma
 - **Confidence threshold**: controls when the app shows a label instead of "Unsure."
 - **Export JSON / CSV**: exports the local calibration session for analysis.
 
+## Project Structure
+
+```text
+.
+|-- index.html                  # Web app entry point
+|-- src/
+|   |-- app.js                  # MediaPipe, calibration, kNN, export logic
+|   `-- styles.css              # Responsive app styling
+|-- public/
+|   |-- models/                 # Local MediaPipe hand landmarker model
+|   `-- wasm/                   # Local MediaPipe WebAssembly runtime
+|-- docs/
+|   `-- USER_TESTING_GUIDE.md   # Suggested tester protocol
+|-- collect_data.py             # Early desktop data-collection prototype
+|-- train_model.py              # Early TensorFlow training prototype
+|-- recognize_signs.py          # Early desktop inference prototype
+|-- python-requirements.txt     # Python-only dependencies
+|-- package.json                # Web app dependencies and scripts
+|-- vercel.json                 # Vercel deployment config
+`-- README.md
+```
+
 ## Python Prototype
 
 Install dependencies:
@@ -102,6 +145,18 @@ The Python scripts are early local prototypes. The web app is the shareable prof
 - The app recognizes isolated signs only, not continuous ASL grammar.
 - It uses one detected hand and does not currently model facial expression or body pose.
 - Browser performance depends on device, lighting, and camera angle.
+
+## Troubleshooting
+
+- If the app says **Hand tracker failed to load**, refresh once and confirm the browser is online.
+- If the camera does not start, check browser camera permissions and use HTTPS or localhost.
+- If predictions stay **Unsure**, capture more examples per label and keep the hand centered.
+- If one sign is confused with another, clear that label's samples and recapture slower, cleaner examples.
+- If testing on a phone, use good lighting and keep the hand inside the camera frame.
+
+## Privacy Note
+
+The web prototype runs in the browser. It does not upload video frames or samples to a server. Exported JSON/CSV files are created only when the tester clicks an export button.
 
 ## Thesis Direction
 
