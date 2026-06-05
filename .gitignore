@@ -184,10 +184,26 @@ dist/
 .vercel/
 
 # Local capstone data/model artifacts
+data/private/
+datasets/
+dataset/
+asl_dataset/
+exports/
+user-testing-exports/
+models/private/
 landmarks*.csv
+few-shot-sign-samples*.csv
+few-shot-sign-session*.json
 asl_model*.h5
 label_encoder*.pkl
 *.keras
+*.npy
+*.npz
+*.parquet
+*.mp4
+*.mov
+*.avi
+*.webm
 
 # Cursor  
 #  Cursor is an AI-powered code editor.`.cursorignore` specifies files/directories to 

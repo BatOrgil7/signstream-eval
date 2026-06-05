@@ -13,6 +13,8 @@ This repository contains two prototype tracks:
 - **Web prototype**: a Vercel-ready browser app that uses the webcam, MediaPipe hand landmarks, and a local few-shot k-nearest-neighbor classifier.
 - **Python prototype**: early OpenCV/MediaPipe/TensorFlow scripts for collecting hand landmarks, training a model, and running live desktop inference.
 
+Private datasets and locally trained model outputs are not committed. See [data/README.md](data/README.md).
+
 ## Quick Test For Professors And Reviewers
 
 1. Open https://asl-translation-capstone.vercel.app in Chrome, Edge, or another modern browser.
@@ -100,6 +102,8 @@ Use the web prototype for early pilot testing, then move to a controlled benchma
 |   `-- wasm/                   # Local MediaPipe WebAssembly runtime
 |-- docs/
 |   `-- USER_TESTING_GUIDE.md   # Suggested tester protocol
+|-- data/
+|   `-- README.md               # Explains where private local datasets go
 |-- collect_data.py             # Early desktop data-collection prototype
 |-- train_model.py              # Early TensorFlow training prototype
 |-- recognize_signs.py          # Early desktop inference prototype
@@ -122,22 +126,32 @@ pip install -r python-requirements.txt
 Collect landmark samples:
 
 ```bash
-python collect_data.py
+python collect_data.py --labels alphabet --output data/private/landmarks_all.csv
 ```
 
 Train a simple neural model:
 
 ```bash
-python train_model.py
+python train_model.py --data data/private/landmarks_all.csv
 ```
 
 Run desktop inference:
 
 ```bash
-python recognize_signs.py
+python recognize_signs.py --model models/private/asl_model_26.h5 --labels models/private/label_encoder_26.pkl
 ```
 
 The Python scripts are early local prototypes. The web app is the shareable professor/testing prototype.
+
+### Private data policy
+
+The following local artifacts are ignored and should not be pushed to GitHub:
+
+- `data/private/`
+- `datasets/`, `dataset/`, and `asl_dataset/`
+- `exports/` and `user-testing-exports/`
+- `models/private/`
+- local CSV, video, NumPy, Keras, H5, and pickle outputs
 
 ## Current Limitations
 
