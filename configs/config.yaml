@@ -1,0 +1,19 @@
+# Composition root. Config groups mirror module boundaries 1:1; the composed
+# config is dumped verbatim into every run directory and hashed into
+# config_hash. No config value is ever read from environment variables except
+# SIGNSTREAM_DATA (dataset root).
+defaults:
+  - dataset: phoenix14t
+  - model: transformer_ctc
+  - streaming: fixed
+  - metrics: core
+  - tracking: wandb_offline
+  - experiment: null
+  - _self_
+
+seed: 42
+stage: all # extract|train|align|simulate|score|stats|figures|all
+paths:
+  data_root: ${oc.env:SIGNSTREAM_DATA,/data/signstream}
+  artifacts: artifacts
+run_id: ${experiment.name}/${model.mask.mode}-k${streaming.lookahead_frames}-s${seed}

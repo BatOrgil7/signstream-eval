@@ -1,0 +1,6 @@
+# E2 (optional): character-level fingerspelling case study.
+name: e2_fsboard
+defaults:
+  - /dataset: fsboard
+  - /model: transformer_ctc
+  - /metrics: core

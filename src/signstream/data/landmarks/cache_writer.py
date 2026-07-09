@@ -29,8 +29,8 @@ from pathlib import Path
 
 import numpy as np
 
-from signstream.landmarks.schema import EXTRACTOR_VERSION
-from signstream.landmarks.video_processor import VideoLandmarks
+from signstream.data.landmarks.schema import EXTRACTOR_VERSION
+from signstream.data.landmarks.video_processor import VideoLandmarks
 
 
 def cache_path_for(cache_dir: Path, corpus: str, video_id: str) -> Path:
@@ -69,9 +69,7 @@ def is_cached(cache_dir: Path, corpus: str, video_id: str) -> bool:
         return False
 
 
-def write_cache(
-    cache_dir: Path, corpus: str, video_id: str, landmarks: VideoLandmarks
-) -> Path:
+def write_cache(cache_dir: Path, corpus: str, video_id: str, landmarks: VideoLandmarks) -> Path:
     """
     Atomically write one video's landmarks to the content-addressed cache.
 

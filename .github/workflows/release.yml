@@ -1,0 +1,15 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t signstream-eval:${{ github.ref_name }} .
+
+  # Attaching the released emission-log / metrics zip to the GitHub release
+  # is wired up once experiment artifacts exist.

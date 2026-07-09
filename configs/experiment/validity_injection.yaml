@@ -1,0 +1,7 @@
+# Protocol construct-validity experiments (V1-V5): synthetic and perturbed
+# logs only — no model, no GPU; the fast subset runs in CI.
+name: validity_injection
+defaults:
+  - /dataset: tinyset
+  - /metrics: core
+  - /tracking: none

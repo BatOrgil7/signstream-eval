@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+coverage.xml
+htmlcov/
+
+# Runtime outputs — regenerated, never committed
+# (anchored so src/signstream/data is not ignored)
+artifacts/
+outputs/
+/data/
+/alignments/
+wandb/
+wandb-offline/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

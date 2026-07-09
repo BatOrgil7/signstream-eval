@@ -1,0 +1,6 @@
+# FSboard fingerspelling subset — optional character-level case study (E2).
+name: fsboard
+unit: char
+fps: null # set when the adapter lands; must come from corpus documentation
+root: ${paths.data_root}/fsboard
+splits: [train, dev, test]

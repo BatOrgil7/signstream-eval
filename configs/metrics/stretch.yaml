@@ -1,0 +1,21 @@
+# Core suite plus the stretch channel-aware latency slice (needs non-manual
+# tiers, e.g. ASL-MTP).
+name: stretch
+metrics:
+  - quality/wer
+  - quality/cer
+  - latency/fel_ms
+  - latency/gel_ms
+  - latency/al
+  - latency/gml_ms
+  - stability/upgr
+  - stability/upsr
+  - stability/ne
+  - stability/swe
+  - compute/step_ms
+  - compute/rtf
+swe:
+  weights:
+    A: 5
+    B: 2
+    C: 1

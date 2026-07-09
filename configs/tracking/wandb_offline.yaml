@@ -1,0 +1,4 @@
+# Default: W&B in offline mode; the local artifact store remains the source
+# of truth, sync is manual and optional.
+name: wandb
+mode: offline

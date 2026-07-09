@@ -1,0 +1,18 @@
+name: transformer_ctc
+d_model: 256
+n_layers: 6
+n_heads: 4
+ffn: 1024
+dropout: 0.1
+features: pose_hands # pose_hands | pose_hands_face
+mask:
+  mode: chunked # bidirectional | causal | chunked
+  chunk_frames: 4
+  lookahead_frames: 4
+train:
+  epochs: 60
+  lr: 3e-4
+  warmup: 2000
+  batch: 32
+  clip: 5.0
+  amp: true

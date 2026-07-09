@@ -1,0 +1,2 @@
+# No tracker; the local filesystem is always authoritative anyway.
+name: none

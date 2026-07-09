@@ -42,7 +42,8 @@ still expose `mp.solutions.holistic.Holistic`.
 
 ## Consequences
 
-- `requirements.txt` pins `mediapipe==0.10.14` exactly, not a range.
+- The `full` dependency extra in `pyproject.toml` (and `requirements.lock`)
+  pins `mediapipe==0.10.14` exactly, not a range.
 - If this version is ever yanked from PyPI or becomes incompatible with a
   future Python version, extraction will need this ADR revisited — check
   here first before re-deriving the reasoning from scratch.

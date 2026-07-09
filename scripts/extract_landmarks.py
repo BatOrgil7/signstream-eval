@@ -34,8 +34,8 @@ from pathlib import Path
 # checkout, without requiring an editable pip install first.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from signstream.landmarks.cache_writer import is_cached, write_cache  # noqa: E402
-from signstream.landmarks.video_processor import (  # noqa: E402
+from signstream.data.landmarks.cache_writer import is_cached, write_cache
+from signstream.data.landmarks.video_processor import (
     VideoReadError,
     extract_frame_folder_landmarks,
     extract_video_landmarks,
@@ -69,9 +69,7 @@ def discover_videos(video_dir: Path) -> list[Path]:
     processing order (deterministic order matters for reproducing progress
     logs and for making partial-run debugging sane -- "which video was #4127"
     should mean the same thing on every run)."""
-    return sorted(
-        p for p in video_dir.rglob("*") if p.suffix.lower() in VIDEO_EXTENSIONS
-    )
+    return sorted(p for p in video_dir.rglob("*") if p.suffix.lower() in VIDEO_EXTENSIONS)
 
 
 def discover_frame_folders(root_dir: Path) -> list[Path]:
@@ -127,7 +125,7 @@ def _process_one(task: ExtractionTask) -> ExtractionResult:
         # Expected failure mode: corrupt file, bad codec, zero frames. Record
         # and move on -- one bad video must never crash a multi-hour run.
         return ExtractionResult(video_id=task.video_id, ok=False, error_message=str(e))
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         # Unexpected failure. Still don't crash the whole pool -- but this
         # gets logged distinctly (see main()) because "unexpected exception"
         # deserves more attention than "known-bad video file."
@@ -166,9 +164,7 @@ def main() -> None:
             "in your cache is traceable to a decision, not a guess."
         ),
     )
-    parser.add_argument(
-        "--workers", type=int, default=max(1, (mp.cpu_count() or 2) - 1)
-    )
+    parser.add_argument("--workers", type=int, default=max(1, (mp.cpu_count() or 2) - 1))
     args = parser.parse_args()
 
     if args.input_mode == "frame-folder" and args.fps is None:
@@ -222,9 +218,7 @@ def main() -> None:
     # Each run's manifest should be read as "what's currently broken," a
     # snapshot, not a historical log.
     ctx = mp.get_context("spawn")
-    with ctx.Pool(processes=args.workers) as pool, open(
-        failure_manifest_path, "w"
-    ) as fail_log:
+    with ctx.Pool(processes=args.workers) as pool, open(failure_manifest_path, "w") as fail_log:
         for i, result in enumerate(pool.imap_unordered(_process_one, tasks), start=1):
             if result.ok:
                 n_ok += 1
@@ -233,8 +227,7 @@ def main() -> None:
             else:
                 n_failed += 1
                 fail_log.write(
-                    json.dumps({"video_id": result.video_id, "error": result.error_message})
-                    + "\n"
+                    json.dumps({"video_id": result.video_id, "error": result.error_message}) + "\n"
                 )
                 fail_log.flush()
 

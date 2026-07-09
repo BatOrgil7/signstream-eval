@@ -1,0 +1,5 @@
+# Offline topline: the bidirectional variant runs only in this mode — a
+# single step observing all frames (plotted as k = infinity).
+mode: offline
+chunk_frames: null
+lookahead_frames: null

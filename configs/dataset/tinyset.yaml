@@ -1,0 +1,7 @@
+# Synthetic 5-utterance CI fixture, committed to git; regenerate with
+# scripts/make_tinyset.py.
+name: tinyset
+unit: gloss
+fps: 25.0
+root: tests/fixtures/tinyset
+splits: [train, dev, test]

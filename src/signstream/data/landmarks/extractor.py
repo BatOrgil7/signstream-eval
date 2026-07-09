@@ -28,13 +28,13 @@ except ImportError as e:  # pragma: no cover - environment guard, not logic
         "pip install mediapipe==0.10.14 --break-system-packages"
     ) from e
 
-from signstream.landmarks.schema import (
-    FrameLandmarks,
+from signstream.data.landmarks.schema import (
     N_COORDS,
     N_FACE_LANDMARKS,
     N_HAND_LANDMARKS,
     N_POSE_LANDMARKS,
     N_TOTAL_LANDMARKS,
+    FrameLandmarks,
 )
 
 
@@ -84,10 +84,18 @@ class HolisticFrameExtractor:
         detected = np.zeros(N_TOTAL_LANDMARKS, dtype=bool)
 
         offset = 0
-        offset = self._fill_group(coords, detected, offset, results.pose_landmarks, N_POSE_LANDMARKS)
-        offset = self._fill_group(coords, detected, offset, results.face_landmarks, N_FACE_LANDMARKS)
-        offset = self._fill_group(coords, detected, offset, results.left_hand_landmarks, N_HAND_LANDMARKS)
-        offset = self._fill_group(coords, detected, offset, results.right_hand_landmarks, N_HAND_LANDMARKS)
+        offset = self._fill_group(
+            coords, detected, offset, results.pose_landmarks, N_POSE_LANDMARKS
+        )
+        offset = self._fill_group(
+            coords, detected, offset, results.face_landmarks, N_FACE_LANDMARKS
+        )
+        offset = self._fill_group(
+            coords, detected, offset, results.left_hand_landmarks, N_HAND_LANDMARKS
+        )
+        offset = self._fill_group(
+            coords, detected, offset, results.right_hand_landmarks, N_HAND_LANDMARKS
+        )
 
         return FrameLandmarks(coords=coords, detected=detected)
 
@@ -120,7 +128,7 @@ class HolisticFrameExtractor:
         per video, after the last frame — not per frame (see class docstring)."""
         self._holistic.close()
 
-    def __enter__(self) -> "HolisticFrameExtractor":
+    def __enter__(self) -> HolisticFrameExtractor:
         return self
 
     def __exit__(self, *exc_info) -> None:

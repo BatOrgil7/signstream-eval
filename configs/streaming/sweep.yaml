@@ -1,0 +1,5 @@
+# Look-ahead sweep base; lookahead_frames is overridden by the experiment's
+# multirun grid.
+mode: sweep
+chunk_frames: 4
+lookahead_frames: 4

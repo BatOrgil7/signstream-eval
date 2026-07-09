@@ -14,8 +14,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from signstream.landmarks.extractor import HolisticFrameExtractor
-from signstream.landmarks.schema import N_COORDS, N_TOTAL_LANDMARKS
+from signstream.data.landmarks.extractor import HolisticFrameExtractor
+from signstream.data.landmarks.schema import N_COORDS, N_TOTAL_LANDMARKS
 
 
 class VideoReadError(RuntimeError):
@@ -135,9 +135,7 @@ def extract_frame_folder_landmarks(frame_dir: Path, fps: float) -> VideoLandmark
     Raises:
         VideoReadError: if the directory has zero readable image frames.
     """
-    frame_paths = sorted(
-        p for p in frame_dir.iterdir() if p.suffix.lower() in _IMAGE_EXTENSIONS
-    )
+    frame_paths = sorted(p for p in frame_dir.iterdir() if p.suffix.lower() in _IMAGE_EXTENSIONS)
     if not frame_paths:
         raise VideoReadError(f"Zero image frames found in: {frame_dir}")
 

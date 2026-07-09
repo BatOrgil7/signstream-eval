@@ -1,0 +1,10 @@
+# Conda alternative to the pip workflow. For a fully pinned pip environment
+# use requirements.lock instead.
+name: signstream-eval
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - -e .[dev]

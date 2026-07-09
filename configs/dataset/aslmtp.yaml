@@ -1,0 +1,7 @@
+# ASL-MTP — stretch corpus (E3), behind data access; carries non-manual tiers.
+name: aslmtp
+unit: gloss
+fps: null # set when the adapter lands; must come from corpus documentation
+root: ${paths.data_root}/aslmtp
+splits: [train, dev, test]
+tiers: true

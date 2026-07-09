@@ -1,0 +1,7 @@
+# RWTH-PHOENIX-Weather 2014T — primary corpus (E1). Ships as per-utterance
+# folders of individual PNG frames at a fixed, documented 25 fps.
+name: phoenix14t
+unit: gloss
+fps: 25.0
+root: ${paths.data_root}/phoenix14t
+splits: [train, dev, test]

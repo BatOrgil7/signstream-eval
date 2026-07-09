@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+title: "signstream-eval: a standardized streaming evaluation protocol for continuous sign language recognition"
+authors:
+  - family-names: Erdenebat
+    given-names: Bat-Orgil
+license: Apache-2.0
+repository-code: "https://github.com/BatOrgil7/signstream-eval"
+version: 0.1.0

@@ -1,0 +1,24 @@
+# Protocol v1.0 core metric suite. Metrics whose requirements a run does not
+# provide (e.g. alignment spans, char unit) are skipped with a warning by the
+# scorer.
+name: core
+metrics:
+  - quality/wer
+  - quality/cer
+  - latency/fel_ms
+  - latency/gel_ms
+  - latency/al
+  - stability/upgr
+  - stability/upsr
+  - stability/ne
+  - stability/swe
+  - compute/step_ms
+  - compute/rtf
+swe:
+  # severity-class weights (A = polarity/sentence-type-bearing units,
+  # B = other unit substitutions/deletions, C = intra-unit character edits);
+  # w_A is sensitivity-swept over {3, 5, 10}.
+  weights:
+    A: 5
+    B: 2
+    C: 1

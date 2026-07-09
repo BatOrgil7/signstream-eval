@@ -1,0 +1,7 @@
+# E3 (stretch): streaming x grammar on ASL-MTP subsets; needs non-manual
+# tiers and granted data access.
+name: e3_grammar
+defaults:
+  - /dataset: aslmtp
+  - /model: transformer_ctc
+  - /metrics: stretch

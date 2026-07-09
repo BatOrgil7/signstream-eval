@@ -1,0 +1,18 @@
+# E1 latency-quality Pareto study.
+# usage: python -m signstream.run experiment=e1_pareto -m
+name: e1_pareto
+defaults:
+  - /dataset: phoenix14t
+  - /model: transformer_ctc
+  - /metrics: core
+hydra:
+  mode: MULTIRUN
+  sweeper:
+    params:
+      model.mask.mode: causal,chunked
+      streaming.lookahead_frames: 0,2,4,8
+      seed: 13,42,1337
+# Offline toplines run separately:
+#   model.mask.mode=bidirectional streaming=offline
+# Invalid combos (causal with k>0) are pruned by a config validator in the
+# runner.

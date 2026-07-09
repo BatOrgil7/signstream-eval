@@ -1,0 +1,4 @@
+# Single fixed streaming operating point.
+mode: fixed
+chunk_frames: 4
+lookahead_frames: 4

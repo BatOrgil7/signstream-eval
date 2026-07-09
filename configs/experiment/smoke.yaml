@@ -1,0 +1,16 @@
+# CI smoke: the full stage graph on the tinyset fixture with a tiny model,
+# CPU-only, target < 5 min.
+name: smoke
+defaults:
+  - /dataset: tinyset
+  - /model: transformer_ctc
+  - /metrics: core
+  - /tracking: none
+model:
+  d_model: 32
+  n_layers: 2
+  n_heads: 2
+  ffn: 64
+  train:
+    epochs: 2
+    batch: 2
