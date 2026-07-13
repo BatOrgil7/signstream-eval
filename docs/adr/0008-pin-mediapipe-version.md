@@ -1,4 +1,4 @@
-# ADR-0001: Pin mediapipe to 0.10.14 for Holistic landmark extraction
+# ADR-0008: Pin mediapipe to 0.10.14 for Holistic landmark extraction
 
 **Status:** Accepted
 **Date:** 2026-07-06

@@ -47,7 +47,7 @@ score = [
 ]
 # Full pipeline: training, simulation, landmark extraction, figures,
 # tracking. mediapipe is pinned exactly — versions 0.10.18+ removed the
-# legacy solutions.holistic API (see docs/adr/0001), and mediapipe requires
+# legacy solutions.holistic API (see docs/adr/0008), and mediapipe requires
 # numpy<2.0, so the ceiling lives here rather than in core deps.
 full = [
     "signstream-eval[score]",
@@ -58,6 +58,7 @@ full = [
     "mediapipe==0.10.14",
     "opencv-python-headless>=4.9",
     "wandb>=0.17",
+    "mlflow>=2.14",
 ]
 dev = [
     "signstream-eval[score]",

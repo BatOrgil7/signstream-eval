@@ -89,7 +89,7 @@ python scripts/extract_landmarks.py --video-dir /data/phoenix14t/features/fullFr
 ```
 
 Extraction is resumable, content-addressed by extractor version, and writes
-a failure manifest. See `docs/adr/0001-pin-mediapipe-version.md` for why
+a failure manifest. See `docs/adr/0008-pin-mediapipe-version.md` for why
 mediapipe is pinned to 0.10.14.
 
 ## Development

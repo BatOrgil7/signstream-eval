@@ -1,0 +1,29 @@
+# Keep the image build context to what the install and pipeline need
+# (.gitignore is not consulted by docker build).
+.git
+.github/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+coverage.xml
+htmlcov/
+artifacts/
+outputs/
+data/
+alignments/
+wandb/
+wandb-offline/
+notebooks/
+.idea/
+.vscode/
+Dockerfile
+.dockerignore

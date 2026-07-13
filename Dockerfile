@@ -9,10 +9,11 @@ WORKDIR /workspace
 
 COPY --chown=signstream:signstream . .
 
-# torch comes from the base image (CUDA build); installing the pinned
-# requirements.lock here would replace it with the PyPI wheel. The project
-# and its remaining dependencies are installed on top of the base instead.
-RUN pip install --no-cache-dir -e ".[dev]"
+# requirements.lock is applied as a constraints file so every dependency
+# installs at its pinned version. The base image's torch 2.4.1 (CUDA build)
+# already satisfies both the [full] range (>=2.4,<2.5) and the lock pin
+# (torch==2.4.1), so it is left in place rather than re-downloaded.
+RUN pip install --no-cache-dir -c requirements.lock -e ".[full,dev]"
 
 USER signstream
 
