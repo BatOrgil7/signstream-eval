@@ -1,0 +1,32 @@
+# Rule: JSON numbers are finite by definition. NaN/Infinity literals are a
+# lenient Python extension — a log containing them cannot be read by a
+# conformant third-party JSON parser, so the validator rejects the file as
+# invalid JSON rather than treating the value as a number.
+#   run_meta.json: dataset.fps serialized as Infinity  -> invalid-json
+#   line 2: t_wall_ms serialized as NaN                -> invalid-json
+# Line 3 is a valid final so the only expected codes come from the
+# non-finite literals themselves.
+description: Non-finite number literals in run_meta.json and an emission line.
+expect:
+  valid: false
+  error_codes: [invalid-json]
+  warning_codes: []
+run_meta:
+  schema_version: "1.0"
+  run_id: "E1/chunked-k4-s42"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "e1_pareto"
+  dataset: { name: phoenix14t, split: test, fps: .inf, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "NVIDIA RTX 4090 24GB" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 10, timer: perf_counter }
+raw_emissions:
+  - '{"type":"utt_start","utt_id":"u1","n_frames":10}'
+  - '{"type":"emission","utt_id":"u1","t_frame":5,"t_wall_ms":NaN,"hyp":["A"],"is_final":false}'
+  - '{"type":"emission","utt_id":"u1","t_frame":9,"t_wall_ms":1.0,"hyp":["A"],"is_final":true}'

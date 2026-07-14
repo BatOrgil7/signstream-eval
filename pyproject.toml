@@ -70,6 +70,7 @@ dev = [
     "pre-commit>=3.7",
     "types-jsonschema>=4.21",
     "jiwer>=3.0",
+    "pyyaml>=6.0",
 ]
 
 [project.urls]
@@ -77,6 +78,9 @@ Repository = "https://github.com/BatOrgil7/signstream-eval"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"signstream.schema" = ["*.schema.json"]
 
 [tool.ruff]
 line-length = 100

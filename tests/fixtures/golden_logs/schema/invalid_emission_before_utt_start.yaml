@@ -1,0 +1,26 @@
+# Rule: an utterance's utt_start record must precede all of its emissions.
+# u1 emits without ever being started => emission-before-utt-start
+# (reported once, at the utterance's first emission).
+description: Emission for an utterance that was never started.
+expect:
+  valid: false
+  error_codes: [emission-before-utt-start]
+  warning_codes: []
+run_meta:
+  schema_version: "1.0"
+  run_id: "E1/chunked-k4-s42"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "e1_pareto"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "NVIDIA RTX 4090 24GB" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 10, timer: perf_counter }
+events:
+  - { type: emission, utt_id: u1, t_frame: 5, t_wall_ms: 1.1, hyp: ["A"], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 9, t_wall_ms: 1.0, hyp: ["A", "B"], is_final: true }

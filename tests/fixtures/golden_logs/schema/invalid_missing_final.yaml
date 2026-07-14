@@ -1,0 +1,28 @@
+# Rule: every started utterance must end with exactly one final emission —
+# empty-output utterances still log events. u1 has only partials, u2 was
+# started and never emitted at all => missing-final-emission for each.
+description: Utterances with no final emission (partials only / no emissions).
+expect:
+  valid: false
+  error_codes: [missing-final-emission]
+  warning_codes: []
+run_meta:
+  schema_version: "1.0"
+  run_id: "E1/chunked-k4-s42"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "e1_pareto"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "NVIDIA RTX 4090 24GB" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 10, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 30 }
+  - { type: emission, utt_id: u1, t_frame: 10, t_wall_ms: 1.2, hyp: ["A"], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 20, t_wall_ms: 1.1, hyp: ["A", "B"], is_final: false }
+  - { type: utt_start, utt_id: u2, n_frames: 15 }

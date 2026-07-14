@@ -10,6 +10,14 @@ The emission-log schema is versioned separately under semantic versioning; see
 
 ### Added
 
+- Emission-log schema v1.0 (`signstream.schema`): typed records (`RunMeta`,
+  `UttStart`/`Emission` under the `EmissionEvent` alias, `Reference`),
+  `EmissionLog` with `load`/`save`/`validate`, a formal JSON Schema
+  (`emission_log.schema.json`) for language-independent validation,
+  structured validation-error reports covering field rules and cross-line
+  ordering (including reference-split coverage), and golden validity
+  fixtures under `tests/fixtures/golden_logs/schema/`.
+
 - Repository scaffold: src layout with the full package skeleton
   (`schema`, `data`, `alignment`, `models`, `streaming`, `metrics`, `stats`,
   `viz`, `runner`, `tracking`, `utils`), Hydra config tree, docs skeleton,

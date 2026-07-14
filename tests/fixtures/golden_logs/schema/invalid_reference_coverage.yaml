@@ -1,0 +1,37 @@
+# Rule: every utt_id in the reference split must appear in the log — even
+# empty-output utterances log events. This prevents cherry-picking easy
+# utterances.
+#   reference u3 never appears in the log -> missing-reference-utterance (error)
+#   logged u9 is not in the reference     -> unexpected-utterance (warning)
+# The same log validates cleanly when no reference is supplied (the
+# coverage check is undefined without one).
+description: Log missing a reference utterance and containing a stray one.
+expect:
+  valid: false
+  error_codes: [missing-reference-utterance]
+  warning_codes: [unexpected-utterance]
+run_meta:
+  schema_version: "1.0"
+  run_id: "E1/chunked-k4-s42"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "e1_pareto"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "NVIDIA RTX 4090 24GB" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 10, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 30 }
+  - { type: emission, utt_id: u1, t_frame: 29, t_wall_ms: 1.0, hyp: ["MORGEN"], is_final: true }
+  - { type: utt_start, utt_id: u9, n_frames: 20 }
+  - { type: emission, utt_id: u9, t_frame: 19, t_wall_ms: 1.0, hyp: ["REGEN"], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u1: ["MORGEN"]
+    u3: ["WIND", "STARK"]

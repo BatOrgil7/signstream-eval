@@ -1,0 +1,36 @@
+# Reference-coverage rule, passing case: the reference split lists exactly
+# the utterances the log contains, and every one appears (with a final
+# emission). Without a reference this check is undefined and skipped —
+# the same log validates either way.
+# => valid, no issues, no warnings.
+description: Log covering its reference split exactly.
+expect:
+  valid: true
+  error_codes: []
+  warning_codes: []
+run_meta:
+  schema_version: "1.0"
+  run_id: "E1/chunked-k8-s1337"
+  created_utc: "2026-08-20T18:45:10Z"
+  git_sha: "b2c3d4e"
+  config_hash: "abcdef01"
+  experiment: "e1_pareto"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 8 }
+  seed: 1337
+  hardware: { gpu: "NVIDIA RTX 4090 24GB", deterministic: true }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 10, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 30 }
+  - { type: emission, utt_id: u1, t_frame: 29, t_wall_ms: 9.0, hyp: ["MORGEN"], is_final: true }
+  - { type: utt_start, utt_id: u2, n_frames: 25 }
+  - { type: emission, utt_id: u2, t_frame: 10, t_wall_ms: 9.4, hyp: [], is_final: false }
+  - { type: emission, utt_id: u2, t_frame: 24, t_wall_ms: 9.2, hyp: ["REGEN"], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u1: ["MORGEN"]
+    u2: ["REGEN"]

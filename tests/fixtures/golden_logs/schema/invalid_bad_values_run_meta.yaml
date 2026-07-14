@@ -1,0 +1,30 @@
+# Rule: value constraints.
+#   dataset.unit "word"        — not in {gloss, char}        -> invalid-value
+#   dataset.fps 0              — must be > 0                 -> invalid-value
+#   mask.mode "full"           — not a variant mode          -> invalid-value
+#   git_sha "XYZ123"           — not lowercase hex >= 7      -> invalid-format
+#   config_hash "9f2e"         — not 8 hex digits            -> invalid-format
+#   created_utc "14/08/2026"   — not ISO-8601 UTC with Z     -> invalid-format
+description: run_meta with out-of-enum, out-of-range, and mis-formatted values.
+expect:
+  valid: false
+  error_codes: [invalid-value, invalid-format]
+  warning_codes: []
+run_meta:
+  schema_version: "1.0"
+  run_id: "E1/chunked-k4-s42"
+  created_utc: "14/08/2026"
+  git_sha: "XYZ123"
+  config_hash: "9f2e"
+  experiment: "e1_pareto"
+  dataset: { name: phoenix14t, split: test, fps: 0, unit: word }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: full, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "NVIDIA RTX 4090 24GB" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 10, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 10 }
+  - { type: emission, utt_id: u1, t_frame: 9, t_wall_ms: 1.0, hyp: ["A"], is_final: true }

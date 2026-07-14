@@ -1,0 +1,27 @@
+# Rule: the logical frame clock runs 0..n_frames-1, so an emission's
+# t_frame must stay below its utterance's n_frames. u1 has n_frames 100 but
+# finalizes at t_frame 100 => t-frame-out-of-range.
+description: Emission at t_frame == n_frames (one past the last frame).
+expect:
+  valid: false
+  error_codes: [t-frame-out-of-range]
+  warning_codes: []
+run_meta:
+  schema_version: "1.0"
+  run_id: "E1/chunked-k4-s42"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "e1_pareto"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "NVIDIA RTX 4090 24GB" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 10, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 100 }
+  - { type: emission, utt_id: u1, t_frame: 50, t_wall_ms: 1.2, hyp: ["A"], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 100, t_wall_ms: 1.0, hyp: ["A", "B"], is_final: true }

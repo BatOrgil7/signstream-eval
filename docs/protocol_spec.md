@@ -26,8 +26,12 @@ hardware-dependent) are always recorded together. *To be written.*
 ## 3. Logging schema (v1.0)
 
 `run_meta.json` (one object per run) + `emissions.jsonl` (one JSON object
-per line; full hypothesis snapshots, never diffs). Field rules, validation,
-and semver policy. *To be written; see `src/signstream/schema/`.*
+per line; full hypothesis snapshots, never diffs). The schema is
+implemented and frozen: the formal field rules live in
+[`src/signstream/schema/emission_log.schema.json`](../src/signstream/schema/emission_log.schema.json)
+(usable from any language), the reference validator — including the
+cross-line ordering and coverage rules JSON Schema cannot express — in
+`signstream.schema`. *Normative prose to be written.*
 
 ## 4. Metric suite
 

@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BatOrgil7/signstream-eval/blob/main/src/signstream/schema/emission_log.schema.json",
+  "title": "SignStream-Eval emission log (schema v1.0)",
+  "description": "Structural field rules of the streaming-evaluation protocol's emission-log contract. A run consists of two files: run_meta.json (exactly one JSON object; validate it against #/$defs/run_meta) and emissions.jsonl (one JSON object per line; validate each line against #/$defs/event). The top-level object here is the combined in-memory form. Unknown extra fields are allowed everywhere (forward compatibility: a schema-version patch adds optional fields; a minor bump adds new line types). Ordering rules that span multiple lines (t_frame non-decreasing per utterance, exactly one final emission per utterance and last, utt_start before emissions, reference-split coverage) cannot be expressed in JSON Schema and are enforced by the reference validator (signstream.schema).",
+  "type": "object",
+  "required": ["run_meta", "events"],
+  "properties": {
+    "run_meta": { "$ref": "#/$defs/run_meta" },
+    "events": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/event" }
+    }
+  },
+  "$defs": {
+    "run_meta": {
+      "description": "The single JSON object in run_meta.json: full provenance for one run.",
+      "type": "object",
+      "required": [
+        "schema_version",
+        "run_id",
+        "created_utc",
+        "git_sha",
+        "config_hash",
+        "experiment",
+        "dataset",
+        "model",
+        "seed",
+        "hardware",
+        "wallclock_protocol"
+      ],
+      "properties": {
+        "schema_version": {
+          "description": "Contract version the log was written against (semver, major.minor or major.minor.patch). This schema document describes version 1.0.",
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+        },
+        "run_id": { "type": "string", "minLength": 1 },
+        "created_utc": {
+          "description": "Creation time in ISO-8601 UTC with a 'Z' suffix, e.g. 2026-08-14T09:31:07Z.",
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+        },
+        "git_sha": {
+          "description": "Commit of the producing code, 7-40 lowercase hex digits; runs from a dirty working tree carry a '-dirty' suffix.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}(-dirty)?$"
+        },
+        "config_hash": {
+          "description": "First 8 hex digits of the composed run config's hash.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}$"
+        },
+        "experiment": { "type": "string", "minLength": 1 },
+        "dataset": {
+          "type": "object",
+          "required": ["name", "split", "fps", "unit"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "split": { "type": "string", "minLength": 1 },
+            "fps": {
+              "description": "Frame rate of the corpus's logical frame clock.",
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "unit": {
+              "description": "The protocol's per-dataset token decision, echoed into every log.",
+              "enum": ["gloss", "char"]
+            }
+          }
+        },
+        "model": {
+          "type": "object",
+          "required": ["name", "params", "mask"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "params": { "type": "integer", "minimum": 0 },
+            "mask": {
+              "description": "The matched-variant switch. chunk_frames/lookahead_frames are null for the bidirectional offline topline (k = infinity).",
+              "type": "object",
+              "required": ["mode", "chunk_frames", "lookahead_frames"],
+              "properties": {
+                "mode": { "enum": ["bidirectional", "causal", "chunked"] },
+                "chunk_frames": { "type": ["integer", "null"], "minimum": 1 },
+                "lookahead_frames": { "type": ["integer", "null"], "minimum": 0 }
+              }
+            }
+          }
+        },
+        "seed": { "type": "integer" },
+        "hardware": {
+          "description": "Free-form hardware block (gpu, driver, torch, deterministic, ...). Keys are not fixed by the contract: CPU-only and third-party runs record different hardware.",
+          "type": "object"
+        },
+        "wallclock_protocol": {
+          "description": "How computational latency was measured (protocol reference values: batch_size 1, warmup_utts 10, timer perf_counter).",
+          "type": "object",
+          "required": ["batch_size", "warmup_utts", "timer"],
+          "properties": {
+            "batch_size": { "type": "integer", "minimum": 1 },
+            "warmup_utts": { "type": "integer", "minimum": 0 },
+            "timer": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "event": {
+      "description": "One emissions.jsonl line: either of the two v1.0 line types.",
+      "oneOf": [{ "$ref": "#/$defs/utt_start" }, { "$ref": "#/$defs/emission" }]
+    },
+    "utt_start": {
+      "description": "Announces one utterance before any of its emissions and fixes its frame count.",
+      "type": "object",
+      "required": ["type", "utt_id", "n_frames"],
+      "properties": {
+        "type": { "const": "utt_start" },
+        "utt_id": { "type": "string", "minLength": 1 },
+        "n_frames": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "emission": {
+      "description": "One full hypothesis snapshot (never a diff). An emission at t_frame means 'hypothesis available after observing frame t_frame'.",
+      "type": "object",
+      "required": ["type", "utt_id", "t_frame", "t_wall_ms", "hyp", "is_final"],
+      "properties": {
+        "type": { "const": "emission" },
+        "utt_id": { "type": "string", "minLength": 1 },
+        "t_frame": { "type": "integer", "minimum": 0 },
+        "t_wall_ms": { "type": "number", "minimum": 0 },
+        "hyp": {
+          "description": "Full unit sequence (units per dataset.unit); may be empty for empty-output utterances.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "is_final": { "type": "boolean" }
+      }
+    }
+  }
+}

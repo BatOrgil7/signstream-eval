@@ -1,0 +1,32 @@
+# Forward compatibility: unknown extra fields are allowed at every level
+# (a schema-version PATCH adds optional fields), and a patch version like
+# "1.0.3" must be accepted by a 1.0 validator. Extra fields here:
+# run_meta.protocol_notes, dataset.language, mask.implementation,
+# a per-event confidence, and a source on utt_start.
+# => valid, no issues; loaders must also preserve these fields (covered by
+# the round-trip unit test).
+description: Unknown extra fields everywhere plus a patch schema_version.
+expect:
+  valid: true
+  error_codes: []
+  warning_codes: []
+run_meta:
+  schema_version: "1.0.3"
+  run_id: "external/system-x"
+  created_utc: "2026-09-01T12:00:00Z"
+  git_sha: "deadbee"
+  config_hash: "12345678"
+  experiment: "third_party_adoption"
+  protocol_notes: "written by an external system"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss, language: DGS }
+  model:
+    name: external_streaming_slr
+    params: 31000000
+    mask: { mode: causal, chunk_frames: 1, lookahead_frames: 0, implementation: flash }
+  seed: 7
+  hardware: { accelerator: "TPU v5e", deterministic: false }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 10, timer: perf_counter, clock_source: monotonic }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 50, source: "camera-2" }
+  - { type: emission, utt_id: u1, t_frame: 20, t_wall_ms: 5.0, hyp: ["HEUTE"], is_final: false, confidence: 0.71 }
+  - { type: emission, utt_id: u1, t_frame: 49, t_wall_ms: 5.2, hyp: ["HEUTE", "ABEND"], is_final: true, confidence: 0.93 }

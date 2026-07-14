@@ -1,0 +1,11 @@
+# Rule: run_meta.json must contain exactly one JSON OBJECT. Here it parses
+# as a JSON array => wrong-type at $.
+description: run_meta.json containing a JSON array instead of an object.
+expect:
+  valid: false
+  error_codes: [wrong-type]
+  warning_codes: []
+run_meta: [1, 2, 3]
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 10 }
+  - { type: emission, utt_id: u1, t_frame: 9, t_wall_ms: 1.0, hyp: ["A"], is_final: true }

@@ -1,0 +1,45 @@
+# Edge-case valid log, exercising boundaries the contract explicitly
+# allows:
+#   u_empty   — empty final hypothesis (empty-output utterances still log
+#               events; hyp: [] is legal).
+#   u_dup_t   — final emission at the SAME t_frame as the preceding partial:
+#               "t_frame never decreases" permits equal values, and the
+#               replay loop's finalize step legitimately shares t_frame with
+#               the last chunk step.
+#   u_one     — minimum-length utterance (n_frames: 1) whose only emission
+#               is the final one, at t_frame 0.
+#   u_shrink  — a revision that SHRINKS the hypothesis (full snapshots may
+#               get shorter; revisions are derived downstream, not logged).
+# => valid, no issues.
+description: Boundary conditions that must be accepted.
+expect:
+  valid: true
+  error_codes: []
+  warning_codes: []
+run_meta:
+  schema_version: "1.0"
+  run_id: "E1/chunked-k0-s13"
+  created_utc: "2026-08-15T14:02:33.250Z"
+  git_sha: "0123456789abcdef0123456789abcdef01234567"
+  config_hash: "00ff00ff"
+  experiment: "e1_pareto"
+  dataset: { name: phoenix14t, split: dev, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 1, lookahead_frames: 0 }
+  seed: 13
+  hardware: { cpu: "AMD Ryzen 9 7950X", deterministic: true }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u_empty, n_frames: 40 }
+  - { type: emission, utt_id: u_empty, t_frame: 39, t_wall_ms: 8.5, hyp: [], is_final: true }
+  - { type: utt_start, utt_id: u_dup_t, n_frames: 12 }
+  - { type: emission, utt_id: u_dup_t, t_frame: 11, t_wall_ms: 9.1, hyp: ["JETZT"], is_final: false }
+  - { type: emission, utt_id: u_dup_t, t_frame: 11, t_wall_ms: 0.2, hyp: ["JETZT"], is_final: true }
+  - { type: utt_start, utt_id: u_one, n_frames: 1 }
+  - { type: emission, utt_id: u_one, t_frame: 0, t_wall_ms: 7.9, hyp: ["IX"], is_final: true }
+  - { type: utt_start, utt_id: u_shrink, n_frames: 10 }
+  - { type: emission, utt_id: u_shrink, t_frame: 3, t_wall_ms: 8.0, hyp: ["REGEN", "MORGEN"], is_final: false }
+  - { type: emission, utt_id: u_shrink, t_frame: 7, t_wall_ms: 8.2, hyp: ["REGEN"], is_final: false }
+  - { type: emission, utt_id: u_shrink, t_frame: 9, t_wall_ms: 8.1, hyp: ["REGEN", "HEUTE"], is_final: true }

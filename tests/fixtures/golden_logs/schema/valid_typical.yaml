@@ -1,0 +1,41 @@
+# Typical valid log: two PHOENIX-2014T utterances, several partial
+# hypotheses each (including a growing prefix — the common streaming
+# pattern), one final emission per utterance as the last event. Field
+# values mirror the run_meta/emissions examples in the design spec.
+# Hand-check: every required field present; t_frame non-decreasing per
+# utterance; exactly one is_final=true per utterance, last; t_frame within
+# 0..n_frames-1. => valid, no issues.
+description: Typical streaming run over two utterances with revisions.
+expect:
+  valid: true
+  error_codes: []
+  warning_codes: []
+run_meta:
+  schema_version: "1.0"
+  run_id: "E1/chunked-k4-s42"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "e1_pareto"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware:
+    gpu: "NVIDIA RTX 4090 24GB"
+    driver: "555.xx"
+    torch: "2.4.1+cu124"
+    deterministic: true
+  wallclock_protocol: { batch_size: 1, warmup_utts: 10, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: "01April_2010_Thursday_heute-6694", n_frames: 176 }
+  - { type: emission, utt_id: "01April_2010_Thursday_heute-6694", t_frame: 3, t_wall_ms: 11.4, hyp: ["__ON__"], is_final: false }
+  - { type: emission, utt_id: "01April_2010_Thursday_heute-6694", t_frame: 87, t_wall_ms: 10.9, hyp: ["__ON__", "MORGEN"], is_final: false }
+  - { type: emission, utt_id: "01April_2010_Thursday_heute-6694", t_frame: 131, t_wall_ms: 12.6, hyp: ["__ON__", "MORGEN", "NORD"], is_final: false }
+  - { type: emission, utt_id: "01April_2010_Thursday_heute-6694", t_frame: 175, t_wall_ms: 12.1, hyp: ["__ON__", "MORGEN", "NORD", "REGEN"], is_final: true }
+  - { type: utt_start, utt_id: "27October_2009_Tuesday_tagesschau-3479", n_frames: 120 }
+  - { type: emission, utt_id: "27October_2009_Tuesday_tagesschau-3479", t_frame: 39, t_wall_ms: 11.0, hyp: ["WETTER"], is_final: false }
+  - { type: emission, utt_id: "27October_2009_Tuesday_tagesschau-3479", t_frame: 79, t_wall_ms: 11.8, hyp: ["WETTER", "HEUTE"], is_final: false }
+  - { type: emission, utt_id: "27October_2009_Tuesday_tagesschau-3479", t_frame: 119, t_wall_ms: 11.3, hyp: ["WETTER", "HEUTE", "NACHT"], is_final: true }
