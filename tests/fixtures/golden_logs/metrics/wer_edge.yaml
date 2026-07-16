@@ -1,0 +1,45 @@
+# quality/wer golden — edge cases (gloss unit).
+# Hand computation:
+#   u_del:  ref [REGEN, WIND, STARK], final []
+#           -> D=3, N=3 -> 3/3 = 1.0  (empty final hypothesis)
+#   u_over: ref [NORD], final [SUED, WIND, KALT]
+#           -> minimal alignment: substitute NORD->SUED + insert WIND +
+#              insert KALT = 3 edits, N=1 -> 3.0 (WER is unbounded above)
+#   u_dup:  ref [MORGEN, MORGEN, REGEN], final [MORGEN, REGEN, REGEN]
+#           -> align MORGEN=MORGEN, MORGEN->REGEN (S), REGEN=REGEN
+#           -> 1 edit, N=3 -> 1/3 = 0.3333333333333333 (repeated tokens)
+# Corpus: (3+3+1) / (3+1+3) = 7/7 = 1.0 ; coverage 1.0
+description: WER edge cases — empty hypothesis, WER > 1, repeated tokens.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/wer-edge"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u_del, n_frames: 50 }
+  - { type: emission, utt_id: u_del, t_frame: 49, t_wall_ms: 1.0, hyp: [], is_final: true }
+  - { type: utt_start, utt_id: u_over, n_frames: 20 }
+  - { type: emission, utt_id: u_over, t_frame: 19, t_wall_ms: 1.0, hyp: [SUED, WIND, KALT], is_final: true }
+  - { type: utt_start, utt_id: u_dup, n_frames: 45 }
+  - { type: emission, utt_id: u_dup, t_frame: 44, t_wall_ms: 1.0, hyp: [MORGEN, REGEN, REGEN], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u_del: [REGEN, WIND, STARK]
+    u_over: [NORD]
+    u_dup: [MORGEN, MORGEN, REGEN]
+expect:
+  metrics:
+    quality/wer:
+      per_utt: { u_del: 1.0, u_over: 3.0, u_dup: 0.3333333333333333 }
+      aggregate: { wer: 1.0, coverage: 1.0 }

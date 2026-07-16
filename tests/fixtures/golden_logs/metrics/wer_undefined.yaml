@@ -1,0 +1,45 @@
+# quality/wer golden — undefined/None cases (gloss unit).
+# Hand computation:
+#   u_empty:  ref [] (N=0), final [GEIST]
+#             -> per-utterance WER undefined (division by N=0) -> null.
+#                The hallucinated insertion still counts in the corpus
+#                sums: edits 1, N 0.
+#   u_ok:     ref [MORGEN], final [MORGEN] -> 0 edits -> 0.0
+#   u_absent: in the reference but absent from the log (no events at all)
+#             -> nothing to score -> null; contributes nothing to sums.
+#             (Such a log fails schema validation against this reference —
+#             the fixture pins metric behavior on partial logs regardless.)
+# Corpus: (1+0) / (0+1) = 1.0 ; coverage = 1 defined / 3 utterances
+#         = 0.3333333333333333
+description: WER undefined cases — empty reference and missing utterance.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/wer-undefined"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u_empty, n_frames: 25 }
+  - { type: emission, utt_id: u_empty, t_frame: 24, t_wall_ms: 1.0, hyp: [GEIST], is_final: true }
+  - { type: utt_start, utt_id: u_ok, n_frames: 30 }
+  - { type: emission, utt_id: u_ok, t_frame: 29, t_wall_ms: 1.0, hyp: [MORGEN], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u_empty: []
+    u_ok: [MORGEN]
+    u_absent: [WIND, KALT]
+expect:
+  metrics:
+    quality/wer:
+      per_utt: { u_empty: null, u_ok: 0.0, u_absent: null }
+      aggregate: { wer: 1.0, coverage: 0.3333333333333333 }

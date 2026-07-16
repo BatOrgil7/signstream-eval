@@ -1,0 +1,49 @@
+# quality/cer golden — edge and undefined cases (char unit).
+# Hand computation:
+#   c_ins:      ref [A], final [A, B, C]
+#               -> I=2, N=1 -> 2.0 (CER unbounded above)
+#   c_delall:   ref [X, Y], final []
+#               -> D=2, N=2 -> 1.0 (empty final hypothesis)
+#   c_eq:       ref [Z], final [Z] -> 0.0
+#   c_emptyref: ref [] (N=0), final [Q]
+#               -> per-utterance CER undefined -> null; its insertion still
+#                  counts in the corpus sums: edits 1, N 0.
+# Corpus: (2+2+0+1) / (1+2+1+0) = 5/4 = 1.25
+# coverage = 3 defined / 4 utterances = 0.75
+description: CER edge cases — CER > 1, empty hypothesis, exact match, empty reference.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/cer-edge"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: fsboard, split: test, fps: 25.0, unit: char }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: c_ins, n_frames: 15 }
+  - { type: emission, utt_id: c_ins, t_frame: 14, t_wall_ms: 1.0, hyp: [A, B, C], is_final: true }
+  - { type: utt_start, utt_id: c_delall, n_frames: 25 }
+  - { type: emission, utt_id: c_delall, t_frame: 24, t_wall_ms: 1.0, hyp: [], is_final: true }
+  - { type: utt_start, utt_id: c_eq, n_frames: 10 }
+  - { type: emission, utt_id: c_eq, t_frame: 9, t_wall_ms: 1.0, hyp: [Z], is_final: true }
+  - { type: utt_start, utt_id: c_emptyref, n_frames: 12 }
+  - { type: emission, utt_id: c_emptyref, t_frame: 11, t_wall_ms: 1.0, hyp: [Q], is_final: true }
+reference:
+  unit: char
+  utterances:
+    c_ins: [A]
+    c_delall: [X, Y]
+    c_eq: [Z]
+    c_emptyref: []
+expect:
+  metrics:
+    quality/cer:
+      per_utt: { c_ins: 2.0, c_delall: 1.0, c_eq: 0.0, c_emptyref: null }
+      aggregate: { cer: 1.25, coverage: 0.75 }

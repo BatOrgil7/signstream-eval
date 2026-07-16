@@ -10,6 +10,14 @@ The emission-log schema is versioned separately under semantic versioning; see
 
 ### Added
 
+- Metric engine foundation (`signstream.metrics`): the `Metric` protocol,
+  `MetricResult`, the metric registry, and `diff_hypotheses` — the
+  protocol's single Levenshtein-alignment revision source. Quality metrics
+  `quality/wer` and `quality/cer` over final hypotheses (corpus-level
+  aggregates with coverage), with hand-computed golden fixtures under
+  `tests/fixtures/golden_logs/metrics/` and a jiwer cross-check in the test
+  suite.
+
 - Emission-log schema v1.0 (`signstream.schema`): typed records (`RunMeta`,
   `UttStart`/`Emission` under the `EmissionEvent` alias, `Reference`),
   `EmissionLog` with `load`/`save`/`validate`, a formal JSON Schema

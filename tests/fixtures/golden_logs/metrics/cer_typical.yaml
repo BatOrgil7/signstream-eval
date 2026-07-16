@@ -1,0 +1,46 @@
+# quality/cer golden — typical case (char unit, fingerspelling-style).
+# On character-unit runs the logged units ARE characters (ADR-7), so
+# CER(u) = (S+D+I)/N over the unit sequences directly.
+# Hand computation:
+#   w1: ref [H, E, L, L, O], final [H, E, L, O]
+#       -> D=1 (one L dropped), N=5 -> 1/5 = 0.2
+#   w2: ref [A, B], final [A, C]
+#       -> S=1, N=2 -> 1/2 = 0.5
+# Corpus: (1+1) / (5+2) = 2/7 = 0.2857142857142857 ; coverage 1.0
+# The same log scored with quality/wer is undefined everywhere: the run's
+# unit is char, and wer is defined only on gloss-unit runs (ADR-7).
+description: CER over two character-unit utterances (one deletion, one substitution).
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/cer-typical"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: fsboard, split: test, fps: 25.0, unit: char }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: w1, n_frames: 50 }
+  - { type: emission, utt_id: w1, t_frame: 20, t_wall_ms: 1.0, hyp: [H, E], is_final: false }
+  - { type: emission, utt_id: w1, t_frame: 49, t_wall_ms: 1.0, hyp: [H, E, L, O], is_final: true }
+  - { type: utt_start, utt_id: w2, n_frames: 20 }
+  - { type: emission, utt_id: w2, t_frame: 19, t_wall_ms: 1.0, hyp: [A, C], is_final: true }
+reference:
+  unit: char
+  utterances:
+    w1: [H, E, L, L, O]
+    w2: [A, B]
+expect:
+  metrics:
+    quality/cer:
+      per_utt: { w1: 0.2, w2: 0.5 }
+      aggregate: { cer: 0.2857142857142857, coverage: 1.0 }
+    quality/wer:
+      per_utt: { w1: null, w2: null }
+      aggregate: { coverage: 0.0 }

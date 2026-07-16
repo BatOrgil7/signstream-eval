@@ -1,0 +1,73 @@
+# Golden edit scripts for diff_hypotheses — the protocol's single revision
+# source. Each case lists prev, next, and the exact expected Edit tuples
+# (op, pos, old, new); pos indexes PREV (insert = before prev[pos];
+# pos == len(prev) appends). Every script below is hand-derived: the edit
+# count equals the Levenshtein distance, and where several minimal scripts
+# exist the documented tie-break (match/substitute, then delete, then
+# insert) decides — those cases are marked "tie".
+cases:
+  - name: identical
+    # Equal hypotheses diff to the empty script.
+    prev: [MORGEN, REGEN]
+    next: [MORGEN, REGEN]
+    edits: []
+
+  - name: single_substitution
+    # One token differs: distance 1, one substitute at prev index 1.
+    prev: [MORGEN, REGEN]
+    next: [MORGEN, WIND]
+    edits: [[substitute, 1, REGEN, WIND]]
+
+  - name: streaming_append
+    # The common streaming pattern: the hypothesis grows at the end.
+    # Two inserts share pos 1 (= len(prev)) and appear in next's order.
+    prev: [MORGEN]
+    next: [MORGEN, NORD, REGEN]
+    edits: [[insert, 1, null, NORD], [insert, 1, null, REGEN]]
+
+  - name: mid_deletion
+    # Distance 1: the middle token is deleted; unique minimal script.
+    prev: [A, B, C]
+    next: [A, C]
+    edits: [[delete, 1, B, null]]
+
+  - name: replace_and_grow_tie
+    # [A] -> [B, C], distance 2. Minimal scripts include
+    # {insert B, substitute A->C} and {substitute A->B, insert C}; the
+    # tie-break picks the alignment matching A against C's position:
+    # insert B before prev[0], then substitute prev[0] A -> C. (tie)
+    prev: [A]
+    next: [B, C]
+    edits: [[insert, 0, null, B], [substitute, 0, A, C]]
+
+  - name: from_empty
+    # First hypothesis of an utterance: everything is an insert at pos 0,
+    # in next's order.
+    prev: []
+    next: [A, B]
+    edits: [[insert, 0, null, A], [insert, 0, null, B]]
+
+  - name: to_empty
+    # Full retraction: every prev token deleted, left-to-right.
+    prev: [A, B]
+    next: []
+    edits: [[delete, 0, A, null], [delete, 1, B, null]]
+
+  - name: swap_tie
+    # [A, B] -> [B, A], distance 2. Could also be delete A + append A;
+    # the tie-break prefers the diagonal, giving two substitutions. (tie)
+    prev: [A, B]
+    next: [B, A]
+    edits: [[substitute, 0, A, B], [substitute, 1, B, A]]
+
+  - name: prefix_kept_append
+    # Streaming: stable prefix, one new token appended.
+    prev: [__ON__, MORGEN]
+    next: [__ON__, MORGEN, NORD]
+    edits: [[insert, 2, null, NORD]]
+
+  - name: mid_revision
+    # A previously emitted token is revised while the suffix stays.
+    prev: [__ON__, WIND, NORD]
+    next: [__ON__, MORGEN, NORD]
+    edits: [[substitute, 1, WIND, MORGEN]]
