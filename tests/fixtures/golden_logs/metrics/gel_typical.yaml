@@ -1,0 +1,60 @@
+# latency/gel_ms golden — typical case (fps 25 -> 40 ms/frame).
+# GEL(g) = (stab(g) - tau(g)) * 1000/fps, tau(g) = the unit's aligned end
+# frame, stab(g) = earliest t_frame from which g holds its final aligned
+# position through to the final emission. Defined only for units correct
+# (matched) in the final hypothesis AND having a span. Frame differences
+# carry no +1 offset; negative = committed before the aligned end.
+#
+#   u1: ref [MORGEN, REGEN]; spans end 39 and 49; T=100
+#     emissions: t=19 [MORGEN]; t=59 [MORGEN,REGEN]; t=99 final (same)
+#     final == ref -> both matched at positions 0,1
+#     stab: pos0 -> 19, pos1 -> 59
+#     MORGEN: (19-39)*40 = -800.0 ms (early)   REGEN: (59-49)*40 = +400.0 ms (late)
+#     per-utterance mean: (-800+400)/2 = -200.0
+#   u2: ref [WIND, KALT]; spans end 9 and 19; T=20
+#     final [WIND, WARM] -> KALT substituted -> undefined for KALT
+#     WIND stable from t=4 -> (4-9)*40 = -200.0 ; per-utterance mean -200.0
+# Pooled unit lags [-800, 400, -200] -> sorted [-800, -200, 400]:
+#   p50 = -200.0 ; p90: h=1.8 -> -200 + 0.8*(400-(-200)) = 280.0
+# coverage = 3 defined units / 4 reference units = 0.75
+description: GEL early vs late units, plus a substituted unit (undefined).
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/gel-typical"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 100 }
+  - { type: emission, utt_id: u1, t_frame: 19, t_wall_ms: 1.0, hyp: [MORGEN], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 59, t_wall_ms: 1.0, hyp: [MORGEN, REGEN], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 99, t_wall_ms: 1.0, hyp: [MORGEN, REGEN], is_final: true }
+  - { type: utt_start, utt_id: u2, n_frames: 20 }
+  - { type: emission, utt_id: u2, t_frame: 4, t_wall_ms: 1.0, hyp: [WIND], is_final: false }
+  - { type: emission, utt_id: u2, t_frame: 19, t_wall_ms: 1.0, hyp: [WIND, WARM], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u1: [MORGEN, REGEN]
+    u2: [WIND, KALT]
+  alignment:
+    u1:
+      - { unit: MORGEN, f_start: 10, f_end: 39 }
+      - { unit: REGEN, f_start: 40, f_end: 49 }
+    u2:
+      - { unit: WIND, f_start: 0, f_end: 9 }
+      - { unit: KALT, f_start: 10, f_end: 19 }
+expect:
+  metrics:
+    latency/gel_ms:
+      per_utt: { u1: -200.0, u2: -200.0 }
+      aggregate: { p50: -200.0, p90: 280.0, coverage: 0.75 }

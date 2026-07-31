@@ -1,0 +1,64 @@
+# latency/al golden — edge cases (revisions, early commitment, growth).
+#   u_shortout: output shorter than the reference; a revision delays
+#     stability. ref N=2, spans end 3 and 6; T=10; y=[A].
+#     emissions: t=2 [B]; t=5 [B]; t=8 [A]; t=9 [A] final
+#     pos0 stable only from t=8 (t=5 still held B) -> stable [8]
+#     g = [#{3,6 <= 8}] = [2] = N -> tau = 1 ; gamma = 1/2
+#     AL = (2 - 0)/1 = 2.0
+#   u_early: committed before ANY unit's aligned end. ref N=2 (ends 3, 6);
+#     T=10; y=[A] stable from t=1 -> g=[0]; never reaches N -> tau=|y|=1
+#     AL = (0 - 0)/1 = 0.0   (zero lag)
+#   u_grow: output longer than the reference. ref N=1 (end 2); T=10;
+#     y=[U,V]; emissions t=1 [U]; t=9 [U,V] final -> stable [1, 9]
+#     g = [#{2<=1}, #{2<=9}] = [0, 1]; tau = min{i:g=1} = 2; gamma = 2/1 = 2
+#     AL = 1/2 * [(0 - 0/2) + (1 - 1/2)] = 0.25
+# Aggregates over [2.0, 0.0, 0.25]: mean 0.75 ; sorted [0.0, 0.25, 2.0]:
+# p50 = 0.25 ; p90: h=1.8 -> 0.25 + 0.8*(2.0-0.25) = 1.65 ; coverage 1.0
+description: AL under revision, early commitment, and hypothesis growth.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/al-edge"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u_shortout, n_frames: 10 }
+  - { type: emission, utt_id: u_shortout, t_frame: 2, t_wall_ms: 1.0, hyp: [B], is_final: false }
+  - { type: emission, utt_id: u_shortout, t_frame: 5, t_wall_ms: 1.0, hyp: [B], is_final: false }
+  - { type: emission, utt_id: u_shortout, t_frame: 8, t_wall_ms: 1.0, hyp: [A], is_final: false }
+  - { type: emission, utt_id: u_shortout, t_frame: 9, t_wall_ms: 1.0, hyp: [A], is_final: true }
+  - { type: utt_start, utt_id: u_early, n_frames: 10 }
+  - { type: emission, utt_id: u_early, t_frame: 1, t_wall_ms: 1.0, hyp: [A], is_final: false }
+  - { type: emission, utt_id: u_early, t_frame: 9, t_wall_ms: 1.0, hyp: [A], is_final: true }
+  - { type: utt_start, utt_id: u_grow, n_frames: 10 }
+  - { type: emission, utt_id: u_grow, t_frame: 1, t_wall_ms: 1.0, hyp: [U], is_final: false }
+  - { type: emission, utt_id: u_grow, t_frame: 9, t_wall_ms: 1.0, hyp: [U, V], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u_shortout: [G1, G2]
+    u_early: [G1, G2]
+    u_grow: [G1]
+  alignment:
+    u_shortout:
+      - { unit: G1, f_start: 0, f_end: 3 }
+      - { unit: G2, f_start: 4, f_end: 6 }
+    u_early:
+      - { unit: G1, f_start: 0, f_end: 3 }
+      - { unit: G2, f_start: 4, f_end: 6 }
+    u_grow:
+      - { unit: G1, f_start: 0, f_end: 2 }
+expect:
+  metrics:
+    latency/al:
+      per_utt: { u_shortout: 2.0, u_early: 0.0, u_grow: 0.25 }
+      aggregate: { mean: 0.75, p50: 0.25, p90: 1.65, coverage: 1.0 }

@@ -1,0 +1,45 @@
+# latency/gel_ms golden — undefined/None cases.
+#   u_nospan:  ref [P, Q]; P's span is missing (null) -> P undefined;
+#              Q stable from t=3, span ends 9 -> (3-9)*40 = -240.0
+#              per-utterance mean over defined units: -240.0
+#   u_noalign: no entry in the alignment map -> all units undefined -> null
+#   u_absent:  in the reference but absent from the log -> null
+# Pooled defined lags: [-240.0] -> p50 = p90 = -240.0
+# coverage = 1 defined unit / 5 reference units = 0.2
+description: GEL undefined via missing span, missing alignment entry, missing utterance.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/gel-undefined"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u_nospan, n_frames: 10 }
+  - { type: emission, utt_id: u_nospan, t_frame: 3, t_wall_ms: 1.0, hyp: [P, Q], is_final: false }
+  - { type: emission, utt_id: u_nospan, t_frame: 9, t_wall_ms: 1.0, hyp: [P, Q], is_final: true }
+  - { type: utt_start, utt_id: u_noalign, n_frames: 10 }
+  - { type: emission, utt_id: u_noalign, t_frame: 9, t_wall_ms: 1.0, hyp: [R], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u_nospan: [P, Q]
+    u_noalign: [R]
+    u_absent: [S, T]
+  alignment:
+    u_nospan:
+      - null
+      - { unit: Q, f_start: 5, f_end: 9 }
+expect:
+  metrics:
+    latency/gel_ms:
+      per_utt: { u_nospan: -240.0, u_noalign: null, u_absent: null }
+      aggregate: { p50: -240.0, p90: -240.0, coverage: 0.2 }

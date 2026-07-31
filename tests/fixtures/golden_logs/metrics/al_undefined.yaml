@@ -1,0 +1,59 @@
+# latency/al golden — undefined/None cases.
+#   u_def:        the al_typical u_basic pattern -> 1.0 (see al_typical.yaml)
+#   u_emptyfinal: final hypothesis is empty (no target units, gamma
+#                 undefined) -> null
+#   u_noalign:    utterance has no entry in the alignment map -> null
+#   u_nospan:     one unit's span is missing (null) — AL needs the complete
+#                 source timing -> null
+#   u_absent:     in the reference but absent from the log -> null
+# Aggregates over the single defined value: mean = p50 = p90 = 1.0
+# coverage = 1/5 = 0.2
+description: AL undefined for empty output, missing alignment, missing spans, missing utterance.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/al-undefined"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u_def, n_frames: 10 }
+  - { type: emission, utt_id: u_def, t_frame: 3, t_wall_ms: 1.0, hyp: [A], is_final: false }
+  - { type: emission, utt_id: u_def, t_frame: 9, t_wall_ms: 1.0, hyp: [A, B], is_final: true }
+  - { type: utt_start, utt_id: u_emptyfinal, n_frames: 10 }
+  - { type: emission, utt_id: u_emptyfinal, t_frame: 3, t_wall_ms: 1.0, hyp: [X], is_final: false }
+  - { type: emission, utt_id: u_emptyfinal, t_frame: 9, t_wall_ms: 1.0, hyp: [], is_final: true }
+  - { type: utt_start, utt_id: u_noalign, n_frames: 8 }
+  - { type: emission, utt_id: u_noalign, t_frame: 7, t_wall_ms: 1.0, hyp: [Y], is_final: true }
+  - { type: utt_start, utt_id: u_nospan, n_frames: 8 }
+  - { type: emission, utt_id: u_nospan, t_frame: 7, t_wall_ms: 1.0, hyp: [Z, W], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u_def: [A, B]
+    u_emptyfinal: [X]
+    u_noalign: [Y]
+    u_nospan: [Z, W]
+    u_absent: [V]
+  alignment:
+    u_def:
+      - { unit: A, f_start: 0, f_end: 3 }
+      - { unit: B, f_start: 4, f_end: 7 }
+    u_emptyfinal:
+      - { unit: X, f_start: 0, f_end: 4 }
+    u_nospan:
+      - null
+      - { unit: W, f_start: 3, f_end: 6 }
+expect:
+  metrics:
+    latency/al:
+      per_utt: { u_def: 1.0, u_emptyfinal: null, u_noalign: null, u_nospan: null, u_absent: null }
+      aggregate: { mean: 1.0, p50: 1.0, p90: 1.0, coverage: 0.2 }

@@ -1,0 +1,60 @@
+# latency/gel_ms golden — index shifting under deletion and insertion.
+# The final hypothesis's indices shift relative to the reference when units
+# are dropped or hallucinated; matching must follow the central Levenshtein
+# alignment, not raw positions.
+#   uC (deletion): ref [K, L, M]; final [K, M] — L deleted (unique minimal
+#     script), so L is undefined; M matches at HYP index 1.
+#     spans end 3, 6, 9; T=12; emissions t=2 [K]; t=8 [K,M]; t=11 final
+#     stab: hyp pos0 -> 2, hyp pos1 -> 8
+#     K: (2-3)*40 = -40.0    M: (8-9)*40 = -40.0    mean -40.0
+#   uD (insertion): ref [N, P]; final [N, W, P] — W inserted (unique
+#     minimal script); P matches at HYP index 2.
+#     spans end 4, 9; T=12; emissions t=3 [N]; t=7 [N,W,P]; t=11 final
+#     stab: hyp pos0 -> 3, hyp pos2 -> 7
+#     N: (3-4)*40 = -40.0    P: (7-9)*40 = -80.0    mean -60.0
+# Pooled [-40, -40, -40, -80] -> sorted [-80, -40, -40, -40]:
+#   p50: h=1.5 -> -40.0 ; p90: h=2.7 -> -40.0
+# coverage = 4 defined units / 5 reference units = 0.8
+description: GEL hypothesis-index shifting under a deleted and an inserted unit.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/gel-shift"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: uC, n_frames: 12 }
+  - { type: emission, utt_id: uC, t_frame: 2, t_wall_ms: 1.0, hyp: [K], is_final: false }
+  - { type: emission, utt_id: uC, t_frame: 8, t_wall_ms: 1.0, hyp: [K, M], is_final: false }
+  - { type: emission, utt_id: uC, t_frame: 11, t_wall_ms: 1.0, hyp: [K, M], is_final: true }
+  - { type: utt_start, utt_id: uD, n_frames: 12 }
+  - { type: emission, utt_id: uD, t_frame: 3, t_wall_ms: 1.0, hyp: [N], is_final: false }
+  - { type: emission, utt_id: uD, t_frame: 7, t_wall_ms: 1.0, hyp: [N, W, P], is_final: false }
+  - { type: emission, utt_id: uD, t_frame: 11, t_wall_ms: 1.0, hyp: [N, W, P], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    uC: [K, L, M]
+    uD: [N, P]
+  alignment:
+    uC:
+      - { unit: K, f_start: 0, f_end: 3 }
+      - { unit: L, f_start: 4, f_end: 6 }
+      - { unit: M, f_start: 7, f_end: 9 }
+    uD:
+      - { unit: N, f_start: 0, f_end: 4 }
+      - { unit: P, f_start: 5, f_end: 9 }
+expect:
+  metrics:
+    latency/gel_ms:
+      per_utt: { uC: -40.0, uD: -60.0 }
+      aggregate: { p50: -40.0, p90: -40.0, coverage: 0.8 }

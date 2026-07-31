@@ -16,23 +16,9 @@ independent cross-check in the test suite only.
 
 from __future__ import annotations
 
-from signstream.metrics.base import MetricResult, register
+from signstream.metrics.base import MetricResult, check_units_match, final_hypotheses, register
 from signstream.metrics.diffing import diff_hypotheses
-from signstream.schema import Emission, EmissionLog, Reference, Unit
-
-
-def _final_hypotheses(log: EmissionLog) -> dict[str, tuple[str, ...]]:
-    """The final hypothesis of every utterance in the log.
-
-    Validated logs carry exactly one final emission per utterance; if a
-    malformed log carries several, the last one wins (metrics stay total —
-    validation, not metrics, is where malformed logs are rejected).
-    """
-    finals: dict[str, tuple[str, ...]] = {}
-    for event in log.events:
-        if isinstance(event, Emission) and event.is_final:
-            finals[event.utt_id] = event.hyp
-    return finals
+from signstream.schema import EmissionLog, Reference, Unit
 
 
 def _error_rate_result(
@@ -61,12 +47,7 @@ def _error_rate_result(
         ValueError: If the reference and the log declare different units —
             a pairing error by the caller, not a scoreable condition.
     """
-    log_unit = log.run_meta.dataset.unit
-    if ref.unit != log_unit:
-        raise ValueError(
-            f"reference unit {ref.unit!r} does not match the log's dataset unit "
-            f"{log_unit!r}; refusing to score a mismatched pair"
-        )
+    check_units_match(ref, log)
 
     per_utt: dict[str, float | None] = {}
     if ref.unit != expected_unit:
@@ -74,7 +55,7 @@ def _error_rate_result(
             per_utt[utt_id] = None
         return MetricResult(name=name, per_utt=per_utt, aggregate={"coverage": 0.0})
 
-    finals = _final_hypotheses(log)
+    finals = final_hypotheses(log)
     total_edits = 0
     total_ref_len = 0
     defined = 0

@@ -1,0 +1,50 @@
+# latency/fel_ms golden — typical case (logical clock, fps 25 -> 40 ms/frame).
+# FEL(u) = (t_first + 1) * 1000/fps, t_first = t_frame of the earliest
+# NON-EMPTY emission ("+1": an emission at t is available after observing
+# frame t, i.e. at video time (t+1)/fps — spec's emission-timing convention).
+# Hand computation:
+#   u1: first non-empty at t=3            -> (3+1)*40  = 160.0 ms
+#   u2: t=4 is EMPTY (doesn't count), first non-empty t=9
+#                                          -> (9+1)*40  = 400.0 ms
+#   u3: first non-empty at t=0 (earliest possible) -> 1*40 = 40.0 ms
+# Aggregates over defined values [40, 160, 400] (inclusive-linear percentiles):
+#   p50 = 160.0 ; p90: rank h=(3-1)*0.9=1.8 -> 160 + 0.8*(400-160) = 352.0
+#   coverage 3/3 = 1.0
+description: FEL over three utterances, including an empty first emission.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/fel-typical"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 60 }
+  - { type: emission, utt_id: u1, t_frame: 3, t_wall_ms: 1.0, hyp: [__ON__], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 59, t_wall_ms: 1.0, hyp: [__ON__, MORGEN], is_final: true }
+  - { type: utt_start, utt_id: u2, n_frames: 40 }
+  - { type: emission, utt_id: u2, t_frame: 4, t_wall_ms: 1.0, hyp: [], is_final: false }
+  - { type: emission, utt_id: u2, t_frame: 9, t_wall_ms: 1.0, hyp: [WETTER], is_final: false }
+  - { type: emission, utt_id: u2, t_frame: 39, t_wall_ms: 1.0, hyp: [WETTER], is_final: true }
+  - { type: utt_start, utt_id: u3, n_frames: 20 }
+  - { type: emission, utt_id: u3, t_frame: 0, t_wall_ms: 1.0, hyp: [JETZT], is_final: false }
+  - { type: emission, utt_id: u3, t_frame: 19, t_wall_ms: 1.0, hyp: [JETZT], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u1: [__ON__, MORGEN]
+    u2: [WETTER]
+    u3: [JETZT]
+expect:
+  metrics:
+    latency/fel_ms:
+      per_utt: { u1: 160.0, u2: 400.0, u3: 40.0 }
+      aggregate: { p50: 160.0, p90: 352.0, coverage: 1.0 }

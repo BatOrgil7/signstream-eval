@@ -1,10 +1,12 @@
-"""Golden and API tests of the quality metrics (quality/wer, quality/cer).
+"""The generic golden runner for ALL metric fixtures, plus quality-metric API tests.
 
 Golden fixtures under ``tests/fixtures/golden_logs/metrics/`` carry a
-complete log, a reference, and hand-computed expected values; the tests
-assert exact agreement (per-utterance values, ``None`` sentinels, aggregate
-key sets, coverage). API tests pin the registry, purity, unit gating, and
-the corpus aggregate against jiwer's independent implementation.
+complete log, a reference, and hand-computed expected values; the runner
+asserts exact agreement (per-utterance values, ``None`` sentinels,
+aggregate key sets, coverage) for every metric named in a fixture's
+``expect.metrics`` — quality and latency alike. The API tests here pin the
+registry, purity, unit gating, and the corpus aggregate against jiwer's
+independent implementation.
 """
 
 from __future__ import annotations

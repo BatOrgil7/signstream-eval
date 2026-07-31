@@ -10,6 +10,15 @@ The emission-log schema is versioned separately under semantic versioning; see
 
 ### Added
 
+- Latency metrics (`signstream.metrics.latency`), all on the logical frame
+  clock: `latency/fel_ms` (first-emission latency), `latency/gel_ms`
+  (per-unit emission lag against aligned ends; `requires={"alignment"}`),
+  and `latency/al` (Average Lagging, Ma et al. 2019, imported; source axis
+  in dataset units via aligned ends; `requires={"alignment"}`), with
+  hand-computed golden fixtures and a wait-k invariant test.
+- `signstream.schema.Span` and an optional `Reference.alignment` field
+  carrying per-unit aligned spans to alignment-requiring metrics.
+
 - Metric engine foundation (`signstream.metrics`): the `Metric` protocol,
   `MetricResult`, the metric registry, and `diff_hypotheses` — the
   protocol's single Levenshtein-alignment revision source. Quality metrics

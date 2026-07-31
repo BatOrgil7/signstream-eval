@@ -25,6 +25,7 @@ from signstream.schema import (
     Reference,
     RunMeta,
     SchemaValidationError,
+    Span,
     UttStart,
     WallclockProtocol,
     event_from_json_obj,
@@ -221,6 +222,14 @@ def test_reference_json_roundtrip() -> None:
     reference = Reference(unit="gloss", utterances={"u1": ("MORGEN", "REGEN"), "u2": ()})
     assert Reference.from_json_obj(reference.to_json_obj()) == reference
     assert reference.utt_ids == frozenset({"u1", "u2"})
+    assert "alignment" not in reference.to_json_obj()
+
+    aligned = Reference(
+        unit="gloss",
+        utterances={"u1": ("MORGEN", "REGEN")},
+        alignment={"u1": (Span(unit="MORGEN", f_start=0, f_end=9), None)},
+    )
+    assert Reference.from_json_obj(aligned.to_json_obj()) == aligned
 
 
 def _with_nan_emission(log: EmissionLog) -> EmissionLog:

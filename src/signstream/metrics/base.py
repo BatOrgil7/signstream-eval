@@ -19,7 +19,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Protocol, TypeVar
 
-from signstream.schema import EmissionLog, Reference
+from signstream.schema import Emission, EmissionLog, Reference
 
 
 @dataclass(frozen=True)
@@ -57,6 +57,44 @@ class Metric(Protocol):
     def compute(self, ref: Reference, log: EmissionLog) -> MetricResult:
         """Compute the metric. Pure: no I/O, no randomness, no global state."""
         ...
+
+
+def check_units_match(ref: Reference, log: EmissionLog) -> None:
+    """Refuse to score a (reference, log) pair with mismatched units.
+
+    Raises:
+        ValueError: If the reference and the log declare different units —
+            a pairing error by the caller, not a scoreable condition.
+    """
+    log_unit = log.run_meta.dataset.unit
+    if ref.unit != log_unit:
+        raise ValueError(
+            f"reference unit {ref.unit!r} does not match the log's dataset unit "
+            f"{log_unit!r}; refusing to score a mismatched pair"
+        )
+
+
+def final_hypotheses(log: EmissionLog) -> dict[str, tuple[str, ...]]:
+    """The final hypothesis of every utterance in the log.
+
+    Validated logs carry exactly one final emission per utterance; if a
+    malformed log carries several, the last one wins (metrics stay total —
+    validation, not metrics, is where malformed logs are rejected).
+    """
+    finals: dict[str, tuple[str, ...]] = {}
+    for event in log.events:
+        if isinstance(event, Emission) and event.is_final:
+            finals[event.utt_id] = event.hyp
+    return finals
+
+
+def emissions_by_utt(log: EmissionLog) -> dict[str, list[Emission]]:
+    """All emission events per utterance, in log (chronological) order."""
+    emissions: dict[str, list[Emission]] = {}
+    for event in log.events:
+        if isinstance(event, Emission):
+            emissions.setdefault(event.utt_id, []).append(event)
+    return emissions
 
 
 #: All registered metrics, keyed by metric name. Populated at import time by

@@ -1,0 +1,56 @@
+# latency/al golden — typical cases. AL (Ma et al. 2019), source axis in
+# dataset units via aligned ends: g(i) = #reference units with f_end <= the
+# stable t_frame of final-hyp position i; gamma = |y|/N;
+# tau = min{i : g(i) = N} (else |y|); AL = (1/tau) * sum_{i<=tau} [g(i) - (i-1)/gamma].
+# Result is in dataset units (no _ms suffix).
+#
+#   u_basic: ref N=2, spans end at frames 3 and 7; T=10.
+#     emissions: t=3 [A] ; t=9 [A,B] final
+#     stable times: pos0 -> 3, pos1 -> 9
+#     g = [#{ends<=3}, #{ends<=9}] = [1, 2] ; gamma = 2/2 = 1 ; tau = 2
+#     AL = 1/2 * [(1 - 0) + (2 - 1)] = 1.0
+#   u_wait_all: everything emitted only at the final step (offline-style).
+#     ref N=2, spans end 2 and 5; T=8; single final at t=7 [P,Q]
+#     stable = [7, 7] ; g = [2, 2] ; gamma = 1 ; tau = min{i: g=2} = 1
+#     AL = (2 - 0)/1 = 2.0   (= N: waited for the whole source)
+# Aggregates over [1.0, 2.0]: mean 1.5 ; p50 1.5 ; p90 = 1.0+0.9*1.0 = 1.9
+# coverage 1.0
+description: AL for an incremental committer vs a wait-for-everything committer.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/al-typical"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u_basic, n_frames: 10 }
+  - { type: emission, utt_id: u_basic, t_frame: 3, t_wall_ms: 1.0, hyp: [A], is_final: false }
+  - { type: emission, utt_id: u_basic, t_frame: 9, t_wall_ms: 1.0, hyp: [A, B], is_final: true }
+  - { type: utt_start, utt_id: u_wait_all, n_frames: 8 }
+  - { type: emission, utt_id: u_wait_all, t_frame: 7, t_wall_ms: 1.0, hyp: [P, Q], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u_basic: [A, B]
+    u_wait_all: [P, Q]
+  alignment:
+    u_basic:
+      - { unit: A, f_start: 0, f_end: 3 }
+      - { unit: B, f_start: 4, f_end: 7 }
+    u_wait_all:
+      - { unit: P, f_start: 0, f_end: 2 }
+      - { unit: Q, f_start: 3, f_end: 5 }
+expect:
+  metrics:
+    latency/al:
+      per_utt: { u_basic: 1.0, u_wait_all: 2.0 }
+      aggregate: { mean: 1.5, p50: 1.5, p90: 1.9, coverage: 1.0 }

@@ -1,12 +1,14 @@
 """Metric engine: every protocol metric as a pure function of (reference, emission log).
 
-Implemented so far (quality family): ``quality/wer`` and ``quality/cer``
-over final hypotheses, plus the shared machinery every later metric builds
-on — the :class:`Metric` protocol, :class:`MetricResult`, the plain-dict
-``REGISTRY`` with its :func:`register` decorator, and
+Implemented so far: the quality family (``quality/wer``, ``quality/cer``)
+and the algorithmic-latency family (``latency/fel_ms``, ``latency/gel_ms``,
+``latency/al`` — all on the logical frame clock; wall-clock metrics are the
+separate compute family), plus the shared machinery every later metric
+builds on — the :class:`Metric` protocol, :class:`MetricResult`, the
+plain-dict ``REGISTRY`` with its :func:`register` decorator, and
 :func:`diff_hypotheses`, the protocol's single Levenshtein-alignment
-revision source (latency, stability, and compute families arrive in later
-increments and must reuse it, never reimplement it).
+revision source (stability and compute families arrive in later increments
+and must reuse it, never reimplement it).
 
 Purity rules: no I/O, no randomness, no global state inside ``compute``.
 The scorer loads/validates logs and checks each metric's ``requires``
@@ -25,13 +27,17 @@ highest coverage requirement in the repository (>= 90%).
 
 from signstream.metrics.base import REGISTRY, Metric, MetricResult, register
 from signstream.metrics.diffing import Edit, EditOp, diff_hypotheses
+from signstream.metrics.latency import AverageLagging, FirstEmissionLatency, GlossEmissionLag
 from signstream.metrics.quality import CharacterErrorRate, WordErrorRate
 
 __all__ = [
     "REGISTRY",
+    "AverageLagging",
     "CharacterErrorRate",
     "Edit",
     "EditOp",
+    "FirstEmissionLatency",
+    "GlossEmissionLag",
     "Metric",
     "MetricResult",
     "WordErrorRate",

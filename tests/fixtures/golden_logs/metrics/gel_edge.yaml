@@ -1,0 +1,57 @@
+# latency/gel_ms golden — edge cases: positional stability and repeated units.
+#   uA: ref [A, B]; spans end 3 and 7; T=10
+#     emissions: t=2 [B]; t=5 [A,B]; t=9 [A,B] final
+#     The early B at t=2 sits at position 0 — NOT B's final aligned
+#     position (1) — so it does not start B's stability.
+#     stab: pos0 -> 5 (t=2 held B there), pos1 -> 5 (t=2 had no pos1)
+#     A: (5-3)*40 = 80.0    B: (5-7)*40 = -80.0    mean 0.0
+#   uB: repeated unit, ref [X, X]; spans end 4 and 9; T=12
+#     emissions: t=6 [X]; t=8 [X,X]; t=11 [X,X] final
+#     Positional matching keeps the two X's distinct:
+#     first X: stab pos0=6 -> (6-4)*40 = 80.0
+#     second X: stab pos1=8 -> (8-9)*40 = -40.0   mean 20.0
+# Pooled [80, -80, 80, -40] -> sorted [-80, -40, 80, 80]:
+#   p50: h=1.5 -> -40 + 0.5*(80-(-40)) = 20.0 ; p90: h=2.7 -> 80 + 0.7*0 = 80.0
+# coverage 4/4 = 1.0
+description: GEL positional-stability subtlety and repeated reference units.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/gel-edge"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: uA, n_frames: 10 }
+  - { type: emission, utt_id: uA, t_frame: 2, t_wall_ms: 1.0, hyp: [B], is_final: false }
+  - { type: emission, utt_id: uA, t_frame: 5, t_wall_ms: 1.0, hyp: [A, B], is_final: false }
+  - { type: emission, utt_id: uA, t_frame: 9, t_wall_ms: 1.0, hyp: [A, B], is_final: true }
+  - { type: utt_start, utt_id: uB, n_frames: 12 }
+  - { type: emission, utt_id: uB, t_frame: 6, t_wall_ms: 1.0, hyp: [X], is_final: false }
+  - { type: emission, utt_id: uB, t_frame: 8, t_wall_ms: 1.0, hyp: [X, X], is_final: false }
+  - { type: emission, utt_id: uB, t_frame: 11, t_wall_ms: 1.0, hyp: [X, X], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    uA: [A, B]
+    uB: [X, X]
+  alignment:
+    uA:
+      - { unit: A, f_start: 0, f_end: 3 }
+      - { unit: B, f_start: 4, f_end: 7 }
+    uB:
+      - { unit: X, f_start: 0, f_end: 4 }
+      - { unit: X, f_start: 5, f_end: 9 }
+expect:
+  metrics:
+    latency/gel_ms:
+      per_utt: { uA: 0.0, uB: 20.0 }
+      aggregate: { p50: 20.0, p90: 80.0, coverage: 1.0 }

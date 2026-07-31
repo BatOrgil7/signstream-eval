@@ -414,23 +414,57 @@ def event_from_json_obj(raw: Mapping[str, Any]) -> EmissionEvent:
 
 
 @dataclass(frozen=True)
+class Span:
+    """Aligned time span of one reference unit: inclusive frame indices.
+
+    Produced by the alignment provider (CTC forced alignment); consumed by
+    latency metrics. ``f_end`` is the unit's aligned end — the frame after
+    whose observation the unit is fully signed.
+
+    Attributes:
+        unit: The reference unit this span times.
+        f_start: First frame of the unit (0-based, inclusive).
+        f_end: Last frame of the unit (0-based, inclusive).
+    """
+
+    unit: str
+    f_start: int
+    f_end: int
+
+    @classmethod
+    def from_json_obj(cls, raw: Mapping[str, Any]) -> Span:
+        """Build from ``{"unit": ..., "f_start": ..., "f_end": ...}``."""
+        return cls(unit=str(raw["unit"]), f_start=int(raw["f_start"]), f_end=int(raw["f_end"]))
+
+    def to_json_obj(self) -> JsonObj:
+        """Serialize to ``{"unit": ..., "f_start": ..., "f_end": ...}``."""
+        return {"unit": self.unit, "f_start": self.f_start, "f_end": self.f_end}
+
+
+@dataclass(frozen=True)
 class Reference:
     """Ground truth the metric engine compares an emission log against.
 
     Carries the per-utterance reference unit sequences and the unit
-    declaration for one dataset split. Alignment spans (per-unit frame
-    times) are intentionally *not* part of this object — they are produced
-    by the alignment provider and consumed only by metrics that declare
-    ``requires={"alignment"}``.
+    declaration for one dataset split, plus — when the run provides them —
+    the aligned time spans that alignment-requiring metrics
+    (``requires={"alignment"}``) consume. The scorer attaches spans from the
+    alignment provider's cache; ``None`` means the run provides no
+    alignment, and such metrics are skipped with a warning.
 
     Attributes:
         unit: Token unit of the reference sequences: ``"gloss"`` or
             ``"char"``.
         utterances: Mapping from ``utt_id`` to its reference unit sequence.
+        alignment: Optional per-utterance spans, positionally parallel to
+            the utterance's unit sequence (``alignment[u][k]`` times
+            ``utterances[u][k]``); an entry may be ``None`` where the
+            aligner produced no span for that unit.
     """
 
     unit: Unit
     utterances: Mapping[str, tuple[str, ...]]
+    alignment: Mapping[str, tuple[Span | None, ...]] | None = None
 
     @property
     def utt_ids(self) -> frozenset[str]:
@@ -439,18 +473,34 @@ class Reference:
 
     @classmethod
     def from_json_obj(cls, raw: Mapping[str, Any]) -> Reference:
-        """Build from a JSON object of shape ``{"unit": ..., "utterances": {id: [units]}}``."""
+        """Build from ``{"unit": ..., "utterances": {id: [units]}, "alignment"?: ...}``."""
+        alignment_raw = raw.get("alignment")
+        alignment: dict[str, tuple[Span | None, ...]] | None = None
+        if alignment_raw is not None:
+            alignment = {
+                str(utt_id): tuple(
+                    None if span is None else Span.from_json_obj(span) for span in spans
+                )
+                for utt_id, spans in alignment_raw.items()
+            }
         return cls(
             unit=cast(Unit, raw["unit"]),
             utterances={
                 str(utt_id): tuple(str(u) for u in units)
                 for utt_id, units in raw["utterances"].items()
             },
+            alignment=alignment,
         )
 
     def to_json_obj(self) -> JsonObj:
-        """Serialize to ``{"unit": ..., "utterances": {id: [units]}}``."""
-        return {
+        """Serialize to ``{"unit": ..., "utterances": {...}}`` (+ alignment when present)."""
+        obj: JsonObj = {
             "unit": self.unit,
             "utterances": {utt_id: list(units) for utt_id, units in self.utterances.items()},
         }
+        if self.alignment is not None:
+            obj["alignment"] = {
+                utt_id: [None if span is None else span.to_json_obj() for span in spans]
+                for utt_id, spans in self.alignment.items()
+            }
+        return obj
