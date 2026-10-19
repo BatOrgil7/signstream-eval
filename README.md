@@ -23,9 +23,39 @@ arrives). This project provides:
    bidirectional variants of one landmark-based recognizer, reported as
    latency–quality Pareto curves.
 
-> **Status:** pre-release scaffold. The package structure, tooling, and the
-> landmark-extraction pipeline are in place; protocol schema, metrics, and
-> the experiment pipeline land incrementally.
+> **Status:** v0.1 in development. The emission-log schema (v1.0) and the
+> complete metric suite are implemented and tested: the scoring core
+> (`schema`, `metrics`) is covered by **160 tests at 100% statement
+> coverage**. The PHOENIX-2014T demonstration study is in progress.
+
+## Metric suite
+
+Every metric is a pure function of a reference transcription and an emission
+log, so any streaming system can be scored without running its code.
+
+| Family | Metric ID | What it measures |
+|---|---|---|
+| Quality | `quality/wer`, `quality/cer` | Word and character error rate of the final hypothesis |
+| Latency | `latency/fel_ms` | First-emission latency: time until the system commits to any output |
+| Latency | `latency/gel_ms` | Per-gloss emission lag against forced-aligned reference ends |
+| Latency | `latency/al` | Average Lagging (Ma et al., 2019), adapted to sign units |
+| Stability | `stability/upgr`, `stability/upsr` | Share of partial output later revised (token-level and non-prefix) |
+| Stability | `stability/ne` | Normalized erasure: how much displayed output is taken back |
+| Stability | `stability/swe` | Severity-weighted erasure: revisions of meaning-critical signs (e.g. negation) cost more |
+
+Latency is measured on a hardware-independent frame clock; computational cost
+is recorded separately on a wall clock, so results compare across machines.
+
+## Verification
+
+Each metric is checked three ways: hand-computed golden fixtures
+(`tests/fixtures/golden_logs/`), property-based invariants with Hypothesis
+(e.g. erasure is zero on monotonic output; `ne <= swe / w_min`), and
+independent cross-checks (WER against `jiwer`).
+
+```bash
+pytest --cov=signstream.schema --cov=signstream.metrics
+```
 
 ## Installation
 
