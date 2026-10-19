@@ -1,0 +1,59 @@
+# Stability goldens — heavy-revision run (typical case for all four).
+# u1 emissions: h0=[MORGEN,REGEN] h1=[MORGEN,WIND] h2=[MORGEN,WIND,NORD]
+#               h3=[MORGEN,NORD] (final)
+# Successive diffs (unique minimal scripts, no tie-break involvement):
+#   d(h0,h1) = substitute(1, REGEN->WIND)          1 sub
+#   d(h1,h2) = insert(2, NORD)                     insert only
+#   d(h2,h3) = delete(1, WIND)                     1 delete
+#   upgr: (1 sub + 1 del) / (|h0|+|h1|+|h2| = 2+2+3 = 7)
+#         = 2/7 = 0.2857142857142857
+#   upsr: h0,h1,h2 all differ from final[:len] -> 3/3 = 1.0
+#   ne:   1 delete / len(final)=2 = 0.5
+#   swe:  sub(B:2) + del(B:2) = 4 / 2 = 2.0   (no class-A tokens here)
+# u2 (mild): partial [HEUTE]; final [HEUTE,ABEND] -> all four 0.0
+# Pooled: upgr (2+0)/(7+1) = 0.25 ; upsr 3/4 = 0.75 ; ne 1/4 = 0.25 ;
+#         swe 4/4 = 1.0 ; coverage 1.0 each.
+description: Heavy revisions with substitution, insertion, and deletion.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/stability-revisions"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 50 }
+  - { type: emission, utt_id: u1, t_frame: 9, t_wall_ms: 1.0, hyp: [MORGEN, REGEN], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 19, t_wall_ms: 1.0, hyp: [MORGEN, WIND], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 29, t_wall_ms: 1.0, hyp: [MORGEN, WIND, NORD], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 49, t_wall_ms: 1.0, hyp: [MORGEN, NORD], is_final: true }
+  - { type: utt_start, utt_id: u2, n_frames: 30 }
+  - { type: emission, utt_id: u2, t_frame: 14, t_wall_ms: 1.0, hyp: [HEUTE], is_final: false }
+  - { type: emission, utt_id: u2, t_frame: 29, t_wall_ms: 1.0, hyp: [HEUTE, ABEND], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u1: [MORGEN, NORD]
+    u2: [HEUTE, ABEND]
+expect:
+  metrics:
+    stability/upgr:
+      per_utt: { u1: 0.2857142857142857, u2: 0.0 }
+      aggregate: { upgr: 0.25, coverage: 1.0 }
+    stability/upsr:
+      per_utt: { u1: 1.0, u2: 0.0 }
+      aggregate: { upsr: 0.75, coverage: 1.0 }
+    stability/ne:
+      per_utt: { u1: 0.5, u2: 0.0 }
+      aggregate: { ne: 0.25, coverage: 1.0 }
+    stability/swe:
+      per_utt: { u1: 2.0, u2: 0.0 }
+      aggregate: { swe: 1.0, coverage: 1.0 }

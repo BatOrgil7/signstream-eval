@@ -1,0 +1,54 @@
+# Stability goldens — perfectly stable (monotonic append-only) run.
+# Every consecutive diff is inserts-only and every partial is a prefix of
+# the final hypothesis, so all four stability metrics are exactly 0.
+#   u1: partials [A], [A,B]; final [A,B]
+#     upgr: 0 changed / (1+2)=3 partial tokens -> 0.0
+#     upsr: both partials are prefixes -> 0/2 = 0.0
+#     ne: 0 deletes / len(final)=2 -> 0.0     swe: 0/2 -> 0.0
+#   u2: partials [] and [X]; final [X,Y] (an empty partial is a prefix)
+#     upgr: 0/(0+1) -> 0.0   upsr: 0/2 -> 0.0   ne, swe: 0/2 -> 0.0
+# Pooled: all four 0.0 ; coverage 1.0 each.
+description: All four stability metrics are zero on an append-only run.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/stability-stable"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 30 }
+  - { type: emission, utt_id: u1, t_frame: 9, t_wall_ms: 1.0, hyp: [A], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 19, t_wall_ms: 1.0, hyp: [A, B], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 29, t_wall_ms: 1.0, hyp: [A, B], is_final: true }
+  - { type: utt_start, utt_id: u2, n_frames: 30 }
+  - { type: emission, utt_id: u2, t_frame: 9, t_wall_ms: 1.0, hyp: [], is_final: false }
+  - { type: emission, utt_id: u2, t_frame: 19, t_wall_ms: 1.0, hyp: [X], is_final: false }
+  - { type: emission, utt_id: u2, t_frame: 29, t_wall_ms: 1.0, hyp: [X, Y], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u1: [A, B]
+    u2: [X, Y]
+expect:
+  metrics:
+    stability/upgr:
+      per_utt: { u1: 0.0, u2: 0.0 }
+      aggregate: { upgr: 0.0, coverage: 1.0 }
+    stability/upsr:
+      per_utt: { u1: 0.0, u2: 0.0 }
+      aggregate: { upsr: 0.0, coverage: 1.0 }
+    stability/ne:
+      per_utt: { u1: 0.0, u2: 0.0 }
+      aggregate: { ne: 0.0, coverage: 1.0 }
+    stability/swe:
+      per_utt: { u1: 0.0, u2: 0.0 }
+      aggregate: { swe: 0.0, coverage: 1.0 }

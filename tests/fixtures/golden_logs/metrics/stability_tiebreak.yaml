@@ -1,0 +1,51 @@
+# Stability goldens — the frozen tie-break's effect on edit COMPOSITION.
+# u_swap: partial [A,B]; final [B,A]. The differ's pinned script for a swap
+# is TWO SUBSTITUTIONS (match/substitute preferred over delete+insert; see
+# the P1.1 diff goldens). Edit distance (2) is tie-break invariant, but
+# composition is not, and this fixture pins the consequences:
+#   ne:  0 deletions -> 0.0/2 = 0.0
+#        (a delete+insert reading would have scored 1/2 = 0.5)
+#   swe: two class-B substitutions -> (2+2)/2 = 2.0
+#        (a delete+insert reading would have scored 2/2 = 1.0: one B-delete,
+#        inserts carry no severity class)
+#   upgr: 2 substituted tokens / 2 partial tokens = 1.0
+#        (delete+insert would give 1/2 = 0.5)
+#   upsr: prefix predicate, no diffing -> tie-break INSENSITIVE: 1/1 = 1.0
+description: Swap revision pinning the substitution-composition tie-break.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/stability-tiebreak"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u_swap, n_frames: 20 }
+  - { type: emission, utt_id: u_swap, t_frame: 9, t_wall_ms: 1.0, hyp: [A, B], is_final: false }
+  - { type: emission, utt_id: u_swap, t_frame: 19, t_wall_ms: 1.0, hyp: [B, A], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u_swap: [B, A]
+expect:
+  metrics:
+    stability/ne:
+      per_utt: { u_swap: 0.0 }
+      aggregate: { ne: 0.0, coverage: 1.0 }
+    stability/swe:
+      per_utt: { u_swap: 2.0 }
+      aggregate: { swe: 2.0, coverage: 1.0 }
+    stability/upgr:
+      per_utt: { u_swap: 1.0 }
+      aggregate: { upgr: 1.0, coverage: 1.0 }
+    stability/upsr:
+      per_utt: { u_swap: 1.0 }
+      aggregate: { upsr: 1.0, coverage: 1.0 }

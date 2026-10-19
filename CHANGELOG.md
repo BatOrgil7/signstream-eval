@@ -10,6 +10,16 @@ The emission-log schema is versioned separately under semantic versioning; see
 
 ### Added
 
+- Stability metrics (`signstream.metrics.stability`), revisions derived
+  from consecutive hypothesis snapshots via the central differ:
+  `stability/upgr` (unstable partial token ratio, UPWR analog),
+  `stability/upsr` (non-prefix partial ratio), `stability/ne` (normalized
+  erasure), and `stability/swe` (severity-weighted erasure with
+  configurable weights and per-corpus class-A token list; PHOENIX defaults
+  `NICHT`/`KEIN`/`NICHT-*`, w = A:5 B:2 C:1). Golden fixtures including a
+  tie-break composition pin, plus hypothesis property tests
+  (ne <= swe/w_min, order/delay invariance, zero-on-monotonic-runs).
+
 - Latency metrics (`signstream.metrics.latency`), all on the logical frame
   clock: `latency/fel_ms` (first-emission latency), `latency/gel_ms`
   (per-unit emission lag against aligned ends; `requires={"alignment"}`),

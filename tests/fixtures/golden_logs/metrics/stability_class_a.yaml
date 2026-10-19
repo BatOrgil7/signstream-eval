@@ -1,0 +1,62 @@
+# Stability goldens — SWE severity classes with the default PHOENIX class-A
+# list (NICHT, KEIN, NICHT-*) and default weights (A:5, B:2, C:1).
+# Three class-A trigger modes, one per utterance:
+#   u1 OLD-side A:    partial [MORGEN,NICHT] -> final [MORGEN,REGEN]
+#     d = substitute(1, NICHT->REGEN): old token NICHT is class A -> w 5
+#     swe 5/2 = 2.5 ; ne 0/2 = 0.0 ; upgr 1/2 = 0.5 ; upsr 1/1 = 1.0
+#   u2 PREFIX-pattern A: partial [GUT,NICHT-GUT] -> final [GUT]
+#     d = delete(1, NICHT-GUT): matches NICHT-* -> w 5
+#     swe 5/1 = 5.0 ; ne 1/1 = 1.0 ; upgr 1/2 = 0.5 ; upsr 1/1 = 1.0
+#   u3 NEW-side A:    partial [MORGEN] -> final [KEIN]
+#     d = substitute(0, MORGEN->KEIN): new token KEIN is class A -> w 5
+#     ("touching" a polarity unit covers both edit sides: introducing a
+#     negation is as severe as retracting one)
+#     swe 5/1 = 5.0 ; ne 0/1 = 0.0 ; upgr 1/1 = 1.0 ; upsr 1/1 = 1.0
+# Pooled: swe (5+5+5)/(2+1+1) = 3.75 ; ne 1/4 = 0.25 ;
+#         upgr 3/(2+2+1) = 0.6 ; upsr 3/3 = 1.0 ; coverage 1.0 each.
+description: Class-A severity via old token, prefix pattern, and new token.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/stability-class-a"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u1, n_frames: 30 }
+  - { type: emission, utt_id: u1, t_frame: 14, t_wall_ms: 1.0, hyp: [MORGEN, NICHT], is_final: false }
+  - { type: emission, utt_id: u1, t_frame: 29, t_wall_ms: 1.0, hyp: [MORGEN, REGEN], is_final: true }
+  - { type: utt_start, utt_id: u2, n_frames: 30 }
+  - { type: emission, utt_id: u2, t_frame: 14, t_wall_ms: 1.0, hyp: [GUT, NICHT-GUT], is_final: false }
+  - { type: emission, utt_id: u2, t_frame: 29, t_wall_ms: 1.0, hyp: [GUT], is_final: true }
+  - { type: utt_start, utt_id: u3, n_frames: 30 }
+  - { type: emission, utt_id: u3, t_frame: 14, t_wall_ms: 1.0, hyp: [MORGEN], is_final: false }
+  - { type: emission, utt_id: u3, t_frame: 29, t_wall_ms: 1.0, hyp: [KEIN], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u1: [MORGEN, REGEN]
+    u2: [GUT]
+    u3: [KEIN]
+expect:
+  metrics:
+    stability/swe:
+      per_utt: { u1: 2.5, u2: 5.0, u3: 5.0 }
+      aggregate: { swe: 3.75, coverage: 1.0 }
+    stability/ne:
+      per_utt: { u1: 0.0, u2: 1.0, u3: 0.0 }
+      aggregate: { ne: 0.25, coverage: 1.0 }
+    stability/upgr:
+      per_utt: { u1: 0.5, u2: 0.5, u3: 1.0 }
+      aggregate: { upgr: 0.6, coverage: 1.0 }
+    stability/upsr:
+      per_utt: { u1: 1.0, u2: 1.0, u3: 1.0 }
+      aggregate: { upsr: 1.0, coverage: 1.0 }

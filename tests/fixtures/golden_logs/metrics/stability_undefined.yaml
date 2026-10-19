@@ -1,0 +1,65 @@
+# Stability goldens — undefined/None cases (each metric's own undefined
+# condition, plus the pooled-aggregate convention: numerators arising in
+# undefined-per-utterance cases still count, mirroring quality/wer).
+#   u_emptyfinal: partial [A]; final [] -> d = delete(0, A)
+#     upgr 1/1 = 1.0 ; upsr [A] not a prefix of [] -> 1/1 = 1.0
+#     ne: 1 delete but len(final)=0 -> null (the delete still pools)
+#     swe: weight 2 pools, len(final)=0 -> null
+#   u_finalonly: only a final emission [X,Y] -> no partials
+#     upgr 0/0 -> null ; upsr 0/0 -> null ; ne 0/2 = 0.0 ; swe 0/2 = 0.0
+#   u_emptypartial: partial []; final [A]
+#     upgr: 0 changed / 0 partial TOKENS -> null (a partial exists but
+#     contributed no tokens) ; upsr: [] is a prefix -> 0/1 = 0.0
+#     ne 0/1 = 0.0 ; swe 0/1 = 0.0
+#   u_absent: in the reference, absent from the log -> all four null
+# Pooled:
+#   upgr (1)/(1) = 1.0            coverage 1/4 = 0.25
+#   upsr (1+0)/(1+1) = 0.5        coverage 2/4 = 0.5
+#   ne   (1+0+0)/(0+2+1) = 1/3 = 0.3333333333333333   coverage 0.5
+#   swe  (2+0+0)/(0+2+1) = 2/3 = 0.6666666666666666   coverage 0.5
+description: Undefined cases — empty final, final-only, empty partial, missing utterance.
+run_meta:
+  schema_version: "1.0"
+  run_id: "golden/stability-undefined"
+  created_utc: "2026-08-14T09:31:07Z"
+  git_sha: "a1b2c3d"
+  config_hash: "9f2e77c1"
+  experiment: "golden"
+  dataset: { name: phoenix14t, split: test, fps: 25.0, unit: gloss }
+  model:
+    name: transformer_ctc
+    params: 9200000
+    mask: { mode: chunked, chunk_frames: 4, lookahead_frames: 4 }
+  seed: 42
+  hardware: { gpu: "synthetic" }
+  wallclock_protocol: { batch_size: 1, warmup_utts: 0, timer: perf_counter }
+events:
+  - { type: utt_start, utt_id: u_emptyfinal, n_frames: 20 }
+  - { type: emission, utt_id: u_emptyfinal, t_frame: 9, t_wall_ms: 1.0, hyp: [A], is_final: false }
+  - { type: emission, utt_id: u_emptyfinal, t_frame: 19, t_wall_ms: 1.0, hyp: [], is_final: true }
+  - { type: utt_start, utt_id: u_finalonly, n_frames: 20 }
+  - { type: emission, utt_id: u_finalonly, t_frame: 19, t_wall_ms: 1.0, hyp: [X, Y], is_final: true }
+  - { type: utt_start, utt_id: u_emptypartial, n_frames: 20 }
+  - { type: emission, utt_id: u_emptypartial, t_frame: 9, t_wall_ms: 1.0, hyp: [], is_final: false }
+  - { type: emission, utt_id: u_emptypartial, t_frame: 19, t_wall_ms: 1.0, hyp: [A], is_final: true }
+reference:
+  unit: gloss
+  utterances:
+    u_emptyfinal: [A]
+    u_finalonly: [X, Y]
+    u_emptypartial: [A]
+    u_absent: [B, C]
+expect:
+  metrics:
+    stability/upgr:
+      per_utt: { u_emptyfinal: 1.0, u_finalonly: null, u_emptypartial: null, u_absent: null }
+      aggregate: { upgr: 1.0, coverage: 0.25 }
+    stability/upsr:
+      per_utt: { u_emptyfinal: 1.0, u_finalonly: null, u_emptypartial: 0.0, u_absent: null }
+      aggregate: { upsr: 0.5, coverage: 0.5 }
+    stability/ne:
+      per_utt: { u_emptyfinal: null, u_finalonly: 0.0, u_emptypartial: 0.0, u_absent: null }
+      aggregate: { ne: 0.3333333333333333, coverage: 0.5 }
+    stability/swe:
+      per_utt: { u_emptyfinal: null, u_finalonly: 0.0, u_emptypartial: 0.0, u_absent: null }
+      aggregate: { swe: 0.6666666666666666, coverage: 0.5 }
